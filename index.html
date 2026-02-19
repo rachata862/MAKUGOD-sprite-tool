@@ -243,7 +243,7 @@
 
     <h2>Export</h2>
     <label>File name (เช่น idle_walk / run_01 / sleep) <span style="opacity:.8">(ไม่ต้องใส่นามสกุล)</span></label>
-    <input id="state" type="text" value="walk" />
+    <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" \/>
     <div class="hint">ระบบจะใช้ชื่อนี้เป็น prefix ของไฟล์ที่ export ทั้งหมด เช่น <b>&lt;file&gt;.json</b>, <b>&lt;file&gt;_frames.zip</b>, <b>&lt;file&gt;_sheet.png</b></div>
 
     <div class="row">
@@ -312,6 +312,18 @@
       </div>
     </div>
 
+    <!-- Selected frame preview (moved out from canvas overlay) -->
+    <div class="row" style="gap:12px; align-items:stretch;">
+      <div style="background:rgba(11,18,32,.6); border:1px solid var(--bd); border-radius:var(--r); padding:10px; display:flex; gap:10px; align-items:center;">
+        <canvas id="prev" width="240" height="240" style="width:240px; height:240px; border-radius:14px; border:1px solid rgba(35,48,68,.9);"></canvas>
+        <div class="hint" style="min-width:220px">
+          <div class="pill" style="margin-bottom:8px;">Selected frame</div>
+          <div id="prevInfo">-</div>
+          <div style="margin-top:8px; opacity:.85">Tip: ถ้า Trim เปิดอยู่ จะพรีวิวเฉพาะส่วนที่ถูก trim</div>
+        </div>
+      </div>
+    </div>
+
     <canvas id="cv" width="1200" height="720"></canvas>
 
     <div>
@@ -358,7 +370,9 @@ const el={
   zoom: $('zoom'), zoomVal: $('zoomVal'), bg: $('bg'),
   imgInfo: $('imgInfo'), frameInfo: $('frameInfo'),
   colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'), rangeBox: $('rangeBox'),
-  cv: $('cv'), strip: $('strip')
+  cv: $('cv'),
+  prev: $('prev'), prevInfo: $('prevInfo'),
+  strip: $('strip')
 };
 
 const ctx = el.cv.getContext('2d');
@@ -575,12 +589,51 @@ function bgPaint(){
   }
 }
 
+function drawSelectedPreview(fr){
+  if(!el.prev) return;
+  const pctx = el.prev.getContext('2d');
+  const W=el.prev.width, H=el.prev.height;
+  // background checker
+  const s=24;
+  pctx.clearRect(0,0,W,H);
+  pctx.fillStyle='#0b1220';
+  pctx.fillRect(0,0,W,H);
+  for(let y=0;y<H;y+=s){
+    for(let x=0;x<W;x+=s){
+      const even=((x/s)+(y/s))%2===0;
+      pctx.fillStyle=even?'rgba(255,255,255,.06)':'rgba(0,0,0,.10)';
+      pctx.fillRect(x,y,s,s);
+    }
+  }
+  if(!img || !fr){
+    if(el.prevInfo) el.prevInfo.textContent='-';
+    return;
+  }
+
+  const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
+  const pad=14;
+  const scale=Math.min((W-2*pad)/src.w, (H-2*pad)/src.h);
+  const dw=Math.max(1, Math.floor(src.w*scale));
+  const dh=Math.max(1, Math.floor(src.h*scale));
+  const dx=Math.floor((W-dw)/2);
+  const dy=Math.floor((H-dh)/2);
+
+  pctx.imageSmoothingEnabled=false;
+  pctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, dw, dh);
+
+  if(el.prevInfo){
+    el.prevInfo.innerHTML = `Frame <b>${selected}</b><br/>`+
+      `Rect: ${fr.w}×${fr.h}` + (el.trim.checked?`<br/>Trim: ${src.w}×${src.h}`:'');
+  }
+}
+
 function draw(){
   bgPaint();
   if(!img){
     ctx.fillStyle='#e6edf3';
     ctx.font='16px system-ui';
     ctx.fillText('อัปโหลดรูปเพื่อเริ่ม', 20, 40);
+    drawSelectedPreview(null);
     return;
   }
 
@@ -627,26 +680,10 @@ function draw(){
       ctx.arc(ox+pivotX*z, oy+pivotY*z, 5, 0, Math.PI*2);
       ctx.fill();
     }
+  }
 
-    // Selected frame preview box
-    const pad=14;
-    const boxW=280, boxH=280;
-    const bx=pad, by=el.cv.height-boxH-pad;
-    ctx.fillStyle='rgba(0,0,0,.35)';
-    ctx.fillRect(bx,by,boxW,boxH);
-
-    const p=10;
-    const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
-    const s = Math.min((boxW-2*p)/src.w, (boxH-2*p)/src.h);
-    const dx = bx + (boxW - src.w*s)/2;
-    const dy = by + (boxH - src.h*s)/2;
-
-    ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, src.w*s, src.h*s);
-
-    ctx.fillStyle='rgba(230,237,243,.85)';
-    ctx.font='12px system-ui';
-    ctx.fillText(`Frame ${selected} • ${fr.w}×${fr.h}${el.trim.checked?` • Trim ${src.w}×${src.h}`:''}`, bx+p, by+p+12);
+  drawSelectedPreview(fr);
+}
   }
 }
 
