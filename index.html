@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sprite Tool v2 — Cut • Preview • Trim • Pack • Export</title>
+  <title>Sprite Tool v2.1 — Cut • Preview • Trim • Pack • Export</title>
   <style>
     :root{
       --bg:#0b0f14; --panel:#111824; --panel2:#0b1220; --bd:#233044;
@@ -26,7 +26,6 @@
     .card{background:var(--panel); border:1px solid var(--bd); border-radius:var(--r); padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,.25)}
     .card h2{margin:0 0 8px; font-size:13px; color:var(--muted); font-weight:650; letter-spacing:.2px}
     .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
     .hr{height:1px; background:var(--bd); margin:12px 0;}
 
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
@@ -51,14 +50,18 @@
     .hint b{color:var(--text)}
 
     /* Right side */
-    .stage{display:grid; grid-template-rows: auto 1fr auto; gap:10px;}
+    .stage{display:grid; grid-template-rows: auto auto 1fr auto; gap:10px;}
     .toolbar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
     .toolbar .group{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 
     .toggle{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--bd); border-radius:12px; background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)}
     .toggle input{accent-color: var(--accent)}
 
-    canvas{width:100%; background:var(--panel2); border:1px solid var(--bd); border-radius:var(--r);}
+    canvas.main{width:100%; background:var(--panel2); border:1px solid var(--bd); border-radius:var(--r);}
+
+    .previewBox{display:flex; gap:12px; align-items:stretch; background:rgba(11,18,32,.6); border:1px solid var(--bd); border-radius:var(--r); padding:10px;}
+    .previewBox canvas{width:240px; height:240px; border-radius:14px; border:1px solid rgba(35,48,68,.9); background:#0b1220;}
+    .previewBox .meta{min-width:220px; display:flex; flex-direction:column; gap:8px; justify-content:center}
 
     .filmstrip{display:flex; gap:8px; overflow:auto; padding:8px; border:1px solid var(--bd); border-radius:var(--r); background:rgba(11,18,32,.6)}
     .thumb{width:74px; min-width:74px; border:1px solid rgba(35,48,68,.9); border-radius:12px; background:rgba(0,0,0,.25); display:flex; flex-direction:column; gap:6px; padding:6px; cursor:pointer}
@@ -73,8 +76,8 @@
 <header>
   <div class="top">
     <div>
-      <h1>Sprite Tool v2 — Cut • Preview • Trim • Pack • Export</h1>
-      <div class="sub">รันในเบราว์เซอร์ (local) • ไม่อัปโหลดรูปออก • คลิกบนภาพย่อยเพื่อกำหนด pivot • รองรับ Trim/Pack/JSON</div>
+      <h1>Sprite Tool v2.1 — Cut • Preview • Trim • Pack • Export</h1>
+      <div class="sub">รันในเบราว์เซอร์ (local) • ไม่อัปโหลดรูปออก • คลิกบน thumbnail เพื่อกำหนด pivot • รองรับ Trim/Pack/JSON</div>
     </div>
     <div class="pill"><span id="imgInfo">No image</span> • <span id="frameInfo">0 frames</span></div>
   </div>
@@ -200,7 +203,7 @@
         <input id="keyTol" type="number" min="0" max="255" value="20" />
       </div>
     </div>
-    <div class="hint">Tip: เปิด <b>Color key</b> แล้วกดปุ่ม <b>Pick</b> จากด้านขวาเพื่อดูดสี</div>
+    <div class="hint">Tip: เปิด <b>Pick color</b> ทางขวา แล้วคลิกบนภาพเพื่อดูดสี</div>
 
     <div class="hr"></div>
 
@@ -242,9 +245,9 @@
     <div class="hr"></div>
 
     <h2>Export</h2>
-    <label>File name (เช่น idle_walk / run_01 / sleep) <span style="opacity:.8">(ไม่ต้องใส่นามสกุล)</span></label>
-    <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" \/>
-    <div class="hint">ระบบจะใช้ชื่อนี้เป็น prefix ของไฟล์ที่ export ทั้งหมด เช่น <b>&lt;file&gt;.json</b>, <b>&lt;file&gt;_frames.zip</b>, <b>&lt;file&gt;_sheet.png</b></div>
+    <label>File name <span style="opacity:.8">(ไม่ต้องใส่นามสกุล)</span></label>
+    <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" />
+    <div class="hint">ระบบจะใช้ชื่อนี้เป็น prefix ของไฟล์ที่ export เช่น <b>&lt;file&gt;.json</b>, <b>&lt;file&gt;_frames.zip</b>, <b>&lt;file&gt;_sheet.png</b></div>
 
     <div class="row">
       <div>
@@ -272,8 +275,8 @@
       <div>
         <label>JSON format</label>
         <select id="jsonFmt">
-          <option value="simple">Simple (state + frames + pivot)</option>
-          <option value="tp">TexturePacker-ish (frames object)</option>
+          <option value="simple">Simple</option>
+          <option value="tp">TexturePacker-ish</option>
         </select>
       </div>
     </div>
@@ -288,7 +291,7 @@
     </div>
 
     <div class="hint" style="margin-top:10px;">
-      <b>คีย์ลัด:</b> <span class="kbd">Space</span> play/pause • <span class="kbd">←</span>/<span class="kbd">→</span> เปลี่ยนเฟรม • คลิกบน thumbnail เพื่อเลือกเฟรม
+      <b>คีย์ลัด:</b> <span class="kbd">Space</span> play/pause • <span class="kbd">←</span>/<span class="kbd">→</span> เปลี่ยนเฟรม • คลิก thumbnail เพื่อเลือกเฟรม/ตั้ง pivot
     </div>
   </div>
 
@@ -302,7 +305,7 @@
         <label class="toggle"><input id="pickMode" type="checkbox"/> Pick color</label>
       </div>
       <div class="group">
-        <span class="pill">Zoom: <span id="zoomVal">1.0x</span></span>
+        <span class="pill">Zoom: <span id="zoomVal">1.00x</span></span>
         <input id="zoom" type="range" min="0.25" max="6" value="1" step="0.05" style="width:220px" />
         <select id="bg">
           <option value="checker">Checker</option>
@@ -312,19 +315,16 @@
       </div>
     </div>
 
-    <!-- Selected frame preview (moved out from canvas overlay) -->
-    <div class="row" style="gap:12px; align-items:stretch;">
-      <div style="background:rgba(11,18,32,.6); border:1px solid var(--bd); border-radius:var(--r); padding:10px; display:flex; gap:10px; align-items:center;">
-        <canvas id="prev" width="240" height="240" style="width:240px; height:240px; border-radius:14px; border:1px solid rgba(35,48,68,.9);"></canvas>
-        <div class="hint" style="min-width:220px">
-          <div class="pill" style="margin-bottom:8px;">Selected frame</div>
-          <div id="prevInfo">-</div>
-          <div style="margin-top:8px; opacity:.85">Tip: ถ้า Trim เปิดอยู่ จะพรีวิวเฉพาะส่วนที่ถูก trim</div>
-        </div>
+    <div class="previewBox">
+      <canvas id="prev" width="240" height="240"></canvas>
+      <div class="meta hint">
+        <div class="pill">Selected frame</div>
+        <div id="prevInfo">-</div>
+        <div style="opacity:.85">ถ้า <b>Trim</b> เปิดอยู่ จะพรีวิวเฉพาะส่วนที่ถูก trim</div>
       </div>
     </div>
 
-    <canvas id="cv" width="1200" height="720"></canvas>
+    <canvas id="cv" class="main" width="1200" height="720"></canvas>
 
     <div>
       <div class="hint" style="margin-bottom:8px;">Filmstrip (คลิกเพื่อเลือกเฟรม • คลิกใน thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก)</div>
@@ -334,53 +334,43 @@
 </div>
 
 <script>
-// --- Dependencies (JSZip) ---
-(function loadZip(){
+// JSZip CDN (ถ้าองค์กรบล็อก CDN → ZIP export จะไม่ทำงาน)
+(function(){
   const s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   document.head.appendChild(s);
 })();
 
-// --- Utils ---
-const $ = (id)=>document.getElementById(id);
+const $=(id)=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const floorInt=(v,def=0)=>{const n=Math.floor(Number(v)); return Number.isFinite(n)?n:def;};
 const nextPow2=(n)=>{let p=1; while(p<n) p<<=1; return p;};
-const hexToRgb=(hex)=>{
-  const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i);
-  if(!m) return {r:0,g:0,b:0};
-  const x=parseInt(m[1],16);
-  return {r:(x>>16)&255, g:(x>>8)&255, b:x&255};
-};
+const hexToRgb=(hex)=>{const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i); if(!m) return {r:0,g:0,b:0}; const x=parseInt(m[1],16); return {r:(x>>16)&255, g:(x>>8)&255, b:x&255};};
 
-// --- Elements ---
 const el={
-  file: $('file'),
-  mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
-  margin: $('margin'), spacing: $('spacing'),
-  order: $('order'), rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'),
+  file: $('file'), mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
+  margin: $('margin'), spacing: $('spacing'), order: $('order'),
+  rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'), rangeBox: $('rangeBox'),
+  colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'),
   px: $('px'), py: $('py'), btnPivotBottom: $('btnPivotBottom'), btnPivotCenter: $('btnPivotCenter'),
   trim: $('trim'), colorkey: $('colorkey'), keyColor: $('keyColor'), keyTol: $('keyTol'),
   fps: $('fps'), fpsVal: $('fpsVal'), frameIdx: $('frameIdx'), idxVal: $('idxVal'),
-  loopMode: $('loopMode'), dirMode: $('dirMode'),
-  btnPlay: $('btnPlay'), btnReset: $('btnReset'),
+  loopMode: $('loopMode'), dirMode: $('dirMode'), btnPlay: $('btnPlay'), btnReset: $('btnReset'),
   state: $('state'), packMode: $('packMode'), pad: $('pad'), pot: $('pot'), jsonFmt: $('jsonFmt'),
   btnJSON: $('btnJSON'), btnZIP: $('btnZIP'), btnSheet: $('btnSheet'), btnAll: $('btnAll'),
   showGrid: $('showGrid'), showPivot: $('showPivot'), pickMode: $('pickMode'),
   zoom: $('zoom'), zoomVal: $('zoomVal'), bg: $('bg'),
   imgInfo: $('imgInfo'), frameInfo: $('frameInfo'),
-  colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'), rangeBox: $('rangeBox'),
-  cv: $('cv'),
-  prev: $('prev'), prevInfo: $('prevInfo'),
-  strip: $('strip')
+  cv: $('cv'), prev: $('prev'), prevInfo: $('prevInfo'), strip: $('strip')
 };
 
-const ctx = el.cv.getContext('2d');
-let img=null;              // Image
-let srcCanvas=null;        // Offscreen canvas of source
-let srcCtx=null;
-let frames=[];             // computed frames: {x,y,w,h, trim?:{x,y,w,h,offX,offY,srcW,srcH}}
-let viewFrames=[];         // frames after applying range
+const ctx=el.cv.getContext('2d');
+const pctx=el.prev.getContext('2d');
+
+let img=null;
+let srcCanvas=null, srcCtx=null;
+let frames=[];     // all frames
+let viewFrames=[]; // ranged frames
 let selected=0;
 let playing=false;
 let timer=null;
@@ -388,26 +378,25 @@ let pingDir=1;
 
 function enableUI(on){
   for(const id of ['btnPlay','btnReset','btnJSON','btnZIP','btnSheet','btnAll','btnPivotBottom','btnPivotCenter']){
-    el[id].disabled = !on;
+    el[id].disabled=!on;
   }
 }
 
 function setModeUI(){
   const m=el.mode.value;
-  el.colsrowsBox.style.display = m==='colsrows' ? '' : 'none';
-  el.framesizeBox.style.display = m==='framesize' ? '' : 'none';
+  el.colsrowsBox.style.display=(m==='colsrows')?'':'none';
+  el.framesizeBox.style.display=(m==='framesize')?'':'none';
   recompute();
 }
 
 function setRangeUI(){
-  el.rangeBox.style.display = el.rangeMode.value==='custom' ? '' : 'none';
+  el.rangeBox.style.display=(el.rangeMode.value==='custom')?'':'none';
   recompute();
 }
 
 async function loadImage(file){
   const url=URL.createObjectURL(file);
   const i=new Image();
-  i.decoding='async';
   await new Promise((res,rej)=>{i.onload=res; i.onerror=rej; i.src=url;});
   URL.revokeObjectURL(url);
   return i;
@@ -425,80 +414,65 @@ function buildSrcCanvas(){
 
 function applyColorKeyIfNeeded(){
   if(!el.colorkey.checked) return;
-  const {r:kr,g:kg,b:kb} = hexToRgb(el.keyColor.value);
+  const {r:kr,g:kg,b:kb}=hexToRgb(el.keyColor.value);
   const tol=clamp(floorInt(el.keyTol.value,20),0,255);
   const im=srcCtx.getImageData(0,0,srcCanvas.width,srcCanvas.height);
   const d=im.data;
   for(let i=0;i<d.length;i+=4){
     const r=d[i], g=d[i+1], b=d[i+2];
-    if(Math.abs(r-kr)<=tol && Math.abs(g-kg)<=tol && Math.abs(b-kb)<=tol){
-      d[i+3]=0;
-    }
+    if(Math.abs(r-kr)<=tol && Math.abs(g-kg)<=tol && Math.abs(b-kb)<=tol) d[i+3]=0;
   }
   srcCtx.putImageData(im,0,0);
 }
 
 function computeGridFrames(){
-  if(!img) return [];
   const margin=clamp(floorInt(el.margin.value,0),0,99999);
   const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
-  let out=[];
+  const out=[];
 
   if(el.mode.value==='colsrows'){
     const cols=clamp(floorInt(el.cols.value,1),1,99999);
     const rows=clamp(floorInt(el.rows.value,1),1,99999);
-    const w=Math.floor((img.width - 2*margin - (cols-1)*spacing) / cols);
-    const h=Math.floor((img.height - 2*margin - (rows-1)*spacing) / rows);
+    const w=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
+    const h=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
+    if(w<=0||h<=0) return [];
 
-    if(w<=0 || h<=0) return [];
-
+    const push=(r,c)=>out.push({x:margin+c*(w+spacing), y:margin+r*(h+spacing), w, h});
     if(el.order.value==='row'){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        out.push({x: margin + c*(w+spacing), y: margin + r*(h+spacing), w, h});
-      }
-    } else {
-      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
-        out.push({x: margin + c*(w+spacing), y: margin + r*(h+spacing), w, h});
-      }
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) push(r,c);
+    }else{
+      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) push(r,c);
     }
   } else {
     const fw=clamp(floorInt(el.fw.value,64),1,img.width);
     const fh=clamp(floorInt(el.fh.value,64),1,img.height);
-    const cols=Math.floor((img.width - 2*margin + spacing) / (fw + spacing));
-    const rows=Math.floor((img.height - 2*margin + spacing) / (fh + spacing));
+    const cols=Math.floor((img.width-2*margin+spacing)/(fw+spacing));
+    const rows=Math.floor((img.height-2*margin+spacing)/(fh+spacing));
+    if(cols<=0||rows<=0) return [];
 
-    if(cols<=0 || rows<=0) return [];
-
-    const gen=(r,c)=>({x: margin + c*(fw+spacing), y: margin + r*(fh+spacing), w: fw, h: fh});
-
+    const gen=(r,c)=>({x:margin+c*(fw+spacing), y:margin+r*(fh+spacing), w:fw, h:fh});
     if(el.order.value==='row'){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
         const fr=gen(r,c);
         if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
       }
-    } else {
+    }else{
       for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
         const fr=gen(r,c);
         if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
       }
     }
-
-    // keep cols/rows inputs in sync (display-only via placeholders)
-    el.cols.placeholder=String(cols);
-    el.rows.placeholder=String(rows);
   }
   return out;
 }
 
 function computeTrimForFrame(fr){
-  // Find bbox of non-transparent pixels inside the frame.
-  // Return trim meta with offsets.
   const im=srcCtx.getImageData(fr.x, fr.y, fr.w, fr.h);
   const d=im.data;
   let minX=fr.w, minY=fr.h, maxX=-1, maxY=-1;
   for(let y=0;y<fr.h;y++){
     for(let x=0;x<fr.w;x++){
-      const a=d[(y*fr.w + x)*4 + 3];
+      const a=d[(y*fr.w+x)*4+3];
       if(a!==0){
         if(x<minX) minX=x;
         if(y<minY) minY=y;
@@ -507,12 +481,9 @@ function computeTrimForFrame(fr){
       }
     }
   }
-  if(maxX<minX || maxY<minY){
-    // fully transparent → keep 1x1 to avoid zero size
-    return {x:0,y:0,w:1,h:1, offX:0, offY:0, srcW:fr.w, srcH:fr.h, empty:true};
-  }
+  if(maxX<minX||maxY<minY) return {x:0,y:0,w:1,h:1,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:true};
   const w=maxX-minX+1, h=maxY-minY+1;
-  return {x:minX,y:minY,w,h, offX:minX, offY:minY, srcW:fr.w, srcH:fr.h, empty:false};
+  return {x:minX,y:minY,w,h,offX:minX,offY:minY,srcW:fr.w,srcH:fr.h,empty:false};
 }
 
 function applyRange(list){
@@ -524,107 +495,73 @@ function applyRange(list){
 }
 
 function recompute(){
-  if(!img){ draw(); return; }
+  if(!img) { draw(); return; }
 
-  // rebuild source canvas each time to re-apply color key deterministically
   buildSrcCanvas();
   applyColorKeyIfNeeded();
 
-  frames = computeGridFrames();
-
-  // compute trim meta if enabled
+  frames=computeGridFrames();
   if(el.trim.checked){
-    for(const fr of frames){ fr.trim = computeTrimForFrame(fr); }
-  } else {
-    for(const fr of frames){ delete fr.trim; }
+    for(const fr of frames) fr.trim=computeTrimForFrame(fr);
+  }else{
+    for(const fr of frames) delete fr.trim;
   }
 
-  viewFrames = applyRange(frames);
+  viewFrames=applyRange(frames);
 
-  // update slider
-  el.frameIdx.max = String(Math.max(0, viewFrames.length-1));
-  selected = clamp(floorInt(el.frameIdx.value,0), 0, Math.max(0, viewFrames.length-1));
-  el.frameIdx.value = String(selected);
-  el.idxVal.textContent = String(selected);
+  el.frameIdx.max=String(Math.max(0, viewFrames.length-1));
+  selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0, viewFrames.length-1));
+  el.frameIdx.value=String(selected);
+  el.idxVal.textContent=String(selected);
 
-  // update range bounds
-  el.rangeStart.max = String(Math.max(0, frames.length-1));
-  el.rangeEnd.max = String(Math.max(0, frames.length-1));
-  if(el.rangeMode.value==='custom'){
-    el.rangeEnd.value = String(clamp(floorInt(el.rangeEnd.value,0), 0, Math.max(0, frames.length-1)));
-  }
+  el.rangeStart.max=String(Math.max(0, frames.length-1));
+  el.rangeEnd.max=String(Math.max(0, frames.length-1));
 
-  // info
-  el.imgInfo.textContent = `${img.width}×${img.height}px`;
-  el.frameInfo.textContent = `${viewFrames.length} frames`;
+  el.imgInfo.textContent=`${img.width}×${img.height}px`;
+  el.frameInfo.textContent=`${viewFrames.length} frames`;
 
-  // filmstrip
   buildFilmstrip();
-
-  // enable
   enableUI(true);
-
   draw();
 }
 
-function bgPaint(){
-  const w=el.cv.width, h=el.cv.height;
-  if(el.bg.value==='checker'){
-    const s=24;
-    ctx.fillStyle='#0b1220';
-    ctx.fillRect(0,0,w,h);
-    for(let y=0;y<h;y+=s){
-      for(let x=0;x<w;x+=s){
-        const even=((x/s)+(y/s))%2===0;
-        ctx.fillStyle=even?'rgba(255,255,255,.06)':'rgba(0,0,0,.10)';
-        ctx.fillRect(x,y,s,s);
-      }
-    }
-  } else if(el.bg.value==='light'){
-    ctx.fillStyle='#e9eef6';
-    ctx.fillRect(0,0,w,h);
-  } else {
-    ctx.fillStyle='#0b1220';
-    ctx.fillRect(0,0,w,h);
-  }
-}
-
-function drawSelectedPreview(fr){
-  if(!el.prev) return;
-  const pctx = el.prev.getContext('2d');
-  const W=el.prev.width, H=el.prev.height;
-  // background checker
+function paintChecker(g, W, H){
   const s=24;
-  pctx.clearRect(0,0,W,H);
-  pctx.fillStyle='#0b1220';
-  pctx.fillRect(0,0,W,H);
+  g.fillStyle='#0b1220';
+  g.fillRect(0,0,W,H);
   for(let y=0;y<H;y+=s){
     for(let x=0;x<W;x+=s){
       const even=((x/s)+(y/s))%2===0;
-      pctx.fillStyle=even?'rgba(255,255,255,.06)':'rgba(0,0,0,.10)';
-      pctx.fillRect(x,y,s,s);
+      g.fillStyle=even?'rgba(255,255,255,.06)':'rgba(0,0,0,.10)';
+      g.fillRect(x,y,s,s);
     }
   }
+}
+
+function bgPaint(){
+  const W=el.cv.width, H=el.cv.height;
+  if(el.bg.value==='checker') paintChecker(ctx, W, H);
+  else if(el.bg.value==='light'){ ctx.fillStyle='#e9eef6'; ctx.fillRect(0,0,W,H); }
+  else { ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H); }
+}
+
+function drawSelectedPreview(fr){
+  paintChecker(pctx, el.prev.width, el.prev.height);
   if(!img || !fr){
-    if(el.prevInfo) el.prevInfo.textContent='-';
+    el.prevInfo.textContent='-';
     return;
   }
-
-  const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
+  const src = (el.trim.checked && fr.trim) ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
   const pad=14;
+  const W=el.prev.width, H=el.prev.height;
   const scale=Math.min((W-2*pad)/src.w, (H-2*pad)/src.h);
   const dw=Math.max(1, Math.floor(src.w*scale));
   const dh=Math.max(1, Math.floor(src.h*scale));
   const dx=Math.floor((W-dw)/2);
   const dy=Math.floor((H-dh)/2);
-
   pctx.imageSmoothingEnabled=false;
   pctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, dw, dh);
-
-  if(el.prevInfo){
-    el.prevInfo.innerHTML = `Frame <b>${selected}</b><br/>`+
-      `Rect: ${fr.w}×${fr.h}` + (el.trim.checked?`<br/>Trim: ${src.w}×${src.h}`:'');
-  }
+  el.prevInfo.innerHTML = `Frame <b>${selected}</b><br/>Rect: ${fr.w}×${fr.h}` + (el.trim.checked?`<br/>Trim: ${src.w}×${src.h}`:'');
 }
 
 function draw(){
@@ -638,9 +575,8 @@ function draw(){
   }
 
   const z=Number(el.zoom.value);
-  el.zoomVal.textContent = `${z.toFixed(2)}x`;
+  el.zoomVal.textContent=`${z.toFixed(2)}x`;
 
-  // center image
   const iw=img.width*z, ih=img.height*z;
   const ox=(el.cv.width-iw)/2;
   const oy=(el.cv.height-ih)/2;
@@ -651,30 +587,25 @@ function draw(){
   if(el.showGrid.checked){
     ctx.strokeStyle='rgba(180,200,255,.22)';
     ctx.lineWidth=1;
-    for(const fr of viewFrames){
-      ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
-    }
+    for(const fr of viewFrames) ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
   }
 
   const fr=viewFrames[selected];
   if(fr){
-    // highlight
     ctx.strokeStyle='rgba(31,111,235,.95)';
     ctx.lineWidth=2;
     ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
 
-    // draw trim bbox
     if(el.trim.checked && fr.trim && !fr.trim.empty){
       ctx.strokeStyle='rgba(255,255,255,.65)';
       ctx.lineWidth=1.5;
       ctx.strokeRect(ox+(fr.x+fr.trim.x)*z, oy+(fr.y+fr.trim.y)*z, fr.trim.w*z, fr.trim.h*z);
     }
 
-    // pivot
     if(el.showPivot.checked){
-      const px=Number(el.px.value); const py=Number(el.py.value);
-      const pivotX = fr.x + fr.w * (Number.isFinite(px)?px:0.5);
-      const pivotY = fr.y + fr.h * (Number.isFinite(py)?py:1.0);
+      const px=Number(el.px.value), py=Number(el.py.value);
+      const pivotX=fr.x + fr.w*(Number.isFinite(px)?px:0.5);
+      const pivotY=fr.y + fr.h*(Number.isFinite(py)?py:1.0);
       ctx.fillStyle='rgba(255,80,80,.95)';
       ctx.beginPath();
       ctx.arc(ox+pivotX*z, oy+pivotY*z, 5, 0, Math.PI*2);
@@ -684,33 +615,25 @@ function draw(){
 
   drawSelectedPreview(fr);
 }
-  }
-}
 
 function buildFilmstrip(){
   el.strip.innerHTML='';
   if(!img || viewFrames.length===0) return;
 
-  // build small thumbnails using offscreen
-  const th=document.createElement('canvas');
-  const tctx=th.getContext('2d');
-  tctx.imageSmoothingEnabled=false;
-
   for(let i=0;i<viewFrames.length;i++){
     const fr=viewFrames[i];
     const div=document.createElement('div');
-    div.className='thumb' + (i===selected?' sel':'');
+    div.className='thumb'+(i===selected?' sel':'');
 
     const c=document.createElement('canvas');
     const max=64;
-    const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h};
+    const src=(el.trim.checked && fr.trim) ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h};
     const s=Math.min(max/src.w, max/src.h);
-    const w=Math.max(1,Math.floor(src.w*s));
-    const h=Math.max(1,Math.floor(src.h*s));
-    c.width=w; c.height=h;
+    c.width=Math.max(1,Math.floor(src.w*s));
+    c.height=Math.max(1,Math.floor(src.h*s));
     const cc=c.getContext('2d');
     cc.imageSmoothingEnabled=false;
-    cc.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, 0,0,w,h);
+    cc.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, 0,0,c.width,c.height);
 
     const t=document.createElement('div');
     t.className='t';
@@ -719,7 +642,6 @@ function buildFilmstrip(){
     div.appendChild(c);
     div.appendChild(t);
 
-    // select frame
     div.addEventListener('click', ()=>{
       selected=i;
       el.frameIdx.value=String(i);
@@ -728,23 +650,20 @@ function buildFilmstrip(){
       draw();
     });
 
-    // set pivot by clicking thumbnail image
     c.addEventListener('click', (ev)=>{
       ev.stopPropagation();
       const rect=c.getBoundingClientRect();
-      const mx=(ev.clientX-rect.left)/rect.width; // 0..1 within thumbnail
+      const mx=(ev.clientX-rect.left)/rect.width;
       const my=(ev.clientY-rect.top)/rect.height;
-      // map back to original frame space (respect trim preview if enabled)
-      // if trim enabled, clicking thumbnail corresponds to trimmed region; convert to full frame normalized pivot
       let px=mx, py=my;
       if(el.trim.checked && fr.trim){
-        const fx = fr.trim.x + mx*fr.trim.w;
-        const fy = fr.trim.y + my*fr.trim.h;
-        px = fx / fr.w;
-        py = fy / fr.h;
+        const fx=fr.trim.x + mx*fr.trim.w;
+        const fy=fr.trim.y + my*fr.trim.h;
+        px=fx/fr.w;
+        py=fy/fr.h;
       }
-      el.px.value = String(clamp(px,0,1).toFixed(2));
-      el.py.value = String(clamp(py,0,1).toFixed(2));
+      el.px.value=String(clamp(px,0,1).toFixed(2));
+      el.py.value=String(clamp(py,0,1).toFixed(2));
       draw();
     });
 
@@ -752,330 +671,26 @@ function buildFilmstrip(){
   }
 }
 
-function downloadBlob(blob, filename){
-  const a=document.createElement('a');
-  const url=URL.createObjectURL(blob);
-  a.href=url; a.download=filename;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 1500);
-}
-
-function getActiveFrames(){
-  return viewFrames;
-}
-
-function getDurationMs(){
-  const fps=clamp(floorInt(el.fps.value,8),1,60);
-  return Math.floor(1000/fps);
-}
-
-function makeSimpleJSON(sheetName, packed, packedFrames){
-  const px=Number(el.px.value); const py=Number(el.py.value);
-  const duration=getDurationMs();
-  const frs=getActiveFrames();
-
-  const out={
-    state: (el.state.value||'state').trim(),
-    sheet: sheetName,
-    image: { width: packed.width, height: packed.height },
-    source: { width: img.width, height: img.height },
-    pivot: { x: Number.isFinite(px)?px:0.5, y: Number.isFinite(py)?py:1.0 },
-    frames: []
-  };
-
-  for(let i=0;i<frs.length;i++){
-    const src=frs[i];
-    const pf=packedFrames[i];
-    const t=el.trim.checked && src.trim ? src.trim : null;
-    out.frames.push({
-      index:i,
-      frame: { x: pf.x, y: pf.y, w: pf.w, h: pf.h },
-      duration_ms: duration,
-      // original location in source image (optional)
-      sourceRect: { x: src.x, y: src.y, w: src.w, h: src.h },
-      ...(t?{ trim: { x:t.x, y:t.y, w:t.w, h:t.h, offX:t.offX, offY:t.offY, srcW:t.srcW, srcH:t.srcH, empty:!!t.empty } }: {})
-    });
-  }
-  return out;
-}
-
-function makeTexturePackerJSON(sheetName, packed, packedFrames){
-  const state=(el.state.value||'state').trim();
-  const frs=getActiveFrames();
-  const out={
-    frames:{},
-    meta:{
-      app:'Sprite Tool v2',
-      image: sheetName,
-      size:{ w: packed.width, h: packed.height },
-      scale:'1'
-    }
-  };
-  for(let i=0;i<frs.length;i++){
-    const src=frs[i];
-    const pf=packedFrames[i];
-    const key=`${state}_${String(i).padStart(3,'0')}.png`;
-    const t=el.trim.checked && src.trim ? src.trim : null;
-    out.frames[key]={
-      frame:{ x:pf.x, y:pf.y, w:pf.w, h:pf.h },
-      rotated:false,
-      trimmed: !!t,
-      spriteSourceSize: t?{ x:t.offX, y:t.offY, w:t.w, h:t.h }:{ x:0,y:0,w:src.w,h:src.h },
-      sourceSize:{ w:src.w, h:src.h }
-    };
-  }
-  return out;
-}
-
-// Packing
-function packGrid(frames, padding){
-  // Simple grid pack: square-ish layout
-  const n=frames.length;
-  if(n===0) return {width:1,height:1, placements:[]};
-  const maxW=Math.max(...frames.map(f=>f.w));
-  const maxH=Math.max(...frames.map(f=>f.h));
-  const cols=Math.ceil(Math.sqrt(n));
-  const rows=Math.ceil(n/cols);
-  const width=cols*maxW + (cols+1)*padding;
-  const height=rows*maxH + (rows+1)*padding;
-
-  const placements=[];
-  for(let i=0;i<n;i++){
-    const c=i%cols;
-    const r=Math.floor(i/cols);
-    placements.push({
-      x: padding + c*(maxW+padding),
-      y: padding + r*(maxH+padding),
-      w: frames[i].w,
-      h: frames[i].h
-    });
-  }
-  return {width,height,placements};
-}
-
-function packShelf(frames, padding){
-  // Shelf pack: place frames in rows by height
-  if(frames.length===0) return {width:1,height:1, placements:[]};
-  // heuristic target width
-  const area=frames.reduce((s,f)=>s+(f.w+padding)*(f.h+padding),0);
-  const targetW=Math.ceil(Math.sqrt(area));
-
-  let x=padding, y=padding, shelfH=0, usedW=padding;
-  const placements=[];
-
-  for(const f of frames){
-    if(x + f.w + padding > targetW && x>padding){
-      // new shelf
-      y += shelfH + padding;
-      x = padding;
-      shelfH = 0;
-    }
-    placements.push({x,y,w:f.w,h:f.h});
-    x += f.w + padding;
-    shelfH = Math.max(shelfH, f.h);
-    usedW = Math.max(usedW, x);
-  }
-  const width = usedW + padding;
-  const height = y + shelfH + padding;
-  return {width,height,placements};
-}
-
-function buildPackedSheet(){
-  // Returns {canvas, placements}
-  const state=(el.state.value||'state').trim();
-  const pad=clamp(floorInt(el.pad.value,2),0,999);
-  const active=getActiveFrames();
-
-  // Use trimmed region size if enabled
-  const sources=active.map(fr=>{
-    if(el.trim.checked && fr.trim){
-      return {w: fr.trim.w, h: fr.trim.h, src: fr, trim: fr.trim};
-    }
-    return {w: fr.w, h: fr.h, src: fr, trim: null};
-  });
-
-  let pack;
-  if(el.packMode.value==='none'){
-    // no packing: use original image and map to original rects
-    const placements=active.map(fr=>({x:fr.x,y:fr.y,w:fr.w,h:fr.h}));
-    return {mode:'none', canvas: srcCanvas, width: img.width, height: img.height, placements};
-  }
-
-  const dims=sources.map(s=>({w:s.w,h:s.h}));
-  if(el.packMode.value==='grid') pack=packGrid(dims, pad);
-  else pack=packShelf(dims, pad);
-
-  let W=pack.width, H=pack.height;
-  if(el.pot.value==='yes'){
-    W=nextPow2(W); H=nextPow2(H);
-  }
-
-  const out=document.createElement('canvas');
-  out.width=W; out.height=H;
-  const octx=out.getContext('2d');
-  octx.imageSmoothingEnabled=false;
-  octx.clearRect(0,0,W,H);
-
-  // draw
-  const placements=[];
-  for(let i=0;i<sources.length;i++){
-    const s=sources[i];
-    const p=pack.placements[i];
-    if(!p) continue;
-
-    if(s.trim){
-      octx.drawImage(srcCanvas, s.src.x+s.trim.x, s.src.y+s.trim.y, s.trim.w, s.trim.h, p.x, p.y, s.trim.w, s.trim.h);
-      placements.push({x:p.x,y:p.y,w:s.trim.w,h:s.trim.h});
-    } else {
-      octx.drawImage(srcCanvas, s.src.x, s.src.y, s.src.w, s.src.h, p.x, p.y, s.src.w, s.src.h);
-      placements.push({x:p.x,y:p.y,w:s.src.w,h:s.src.h});
-    }
-  }
-
-  return {mode:el.packMode.value, canvas: out, width: out.width, height: out.height, placements};
-}
-
-async function canvasToPngBlob(c){
-  return await new Promise(res=>c.toBlob(res,'image/png'));
-}
-
-async function exportJSON(){
-  if(!img) return;
-  const state=(el.state.value||'state').trim();
-  const packed=buildPackedSheet();
-  const sheetName = packed.mode==='none' ? '(source image)' : `${state}_sheet.png`;
-
-  const json = (el.jsonFmt.value==='tp')
-    ? makeTexturePackerJSON(sheetName, packed, packed.placements)
-    : makeSimpleJSON(sheetName, packed, packed.placements);
-
-  const blob=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
-  downloadBlob(blob, `${state}.json`);
-}
-
-async function exportFramesZip(){
-  if(!img) return;
-  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
-
-  const state=(el.state.value||'state').trim();
-  const zip=new JSZip();
-
-  const off=document.createElement('canvas');
-  const octx=off.getContext('2d');
-  octx.imageSmoothingEnabled=false;
-
-  const active=getActiveFrames();
-  for(let i=0;i<active.length;i++){
-    const fr=active[i];
-    const t=el.trim.checked && fr.trim ? fr.trim : null;
-    const sx = fr.x + (t?t.x:0);
-    const sy = fr.y + (t?t.y:0);
-    const sw = (t?t.w:fr.w);
-    const sh = (t?t.h:fr.h);
-
-    off.width=sw; off.height=sh;
-    octx.clearRect(0,0,sw,sh);
-    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
-
-    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
-    const arr=await blob.arrayBuffer();
-    zip.file(`${state}_${String(i).padStart(3,'0')}.png`, arr);
-  }
-
-  const out=await zip.generateAsync({type:'blob'});
-  downloadBlob(out, `${state}_frames.zip`);
-}
-
-async function exportPackedSheet(){
-  if(!img) return;
-  const state=(el.state.value||'state').trim();
-  const packed=buildPackedSheet();
-  if(packed.mode==='none'){
-    // export source as convenience
-    const blob=await canvasToPngBlob(srcCanvas);
-    downloadBlob(blob, `${state}_source.png`);
-    return;
-  }
-  const blob=await canvasToPngBlob(packed.canvas);
-  downloadBlob(blob, `${state}_sheet.png`);
-}
-
-async function exportAllZip(){
-  if(!img) return;
-  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
-
-  const state=(el.state.value||'state').trim();
-  const zip=new JSZip();
-
-  // JSON
-  const packed=buildPackedSheet();
-  const sheetName = packed.mode==='none' ? '(source image)' : `${state}_sheet.png`;
-  const json = (el.jsonFmt.value==='tp')
-    ? makeTexturePackerJSON(sheetName, packed, packed.placements)
-    : makeSimpleJSON(sheetName, packed, packed.placements);
-  zip.file(`${state}.json`, JSON.stringify(json,null,2));
-
-  // frames
-  const off=document.createElement('canvas');
-  const octx=off.getContext('2d');
-  octx.imageSmoothingEnabled=false;
-  const active=getActiveFrames();
-  for(let i=0;i<active.length;i++){
-    const fr=active[i];
-    const t=el.trim.checked && fr.trim ? fr.trim : null;
-    const sx = fr.x + (t?t.x:0);
-    const sy = fr.y + (t?t.y:0);
-    const sw = (t?t.w:fr.w);
-    const sh = (t?t.h:fr.h);
-
-    off.width=sw; off.height=sh;
-    octx.clearRect(0,0,sw,sh);
-    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
-
-    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
-    const arr=await blob.arrayBuffer();
-    zip.file(`frames/${state}_${String(i).padStart(3,'0')}.png`, arr);
-  }
-
-  // sheet
-  const sheetCanvas = (packed.mode==='none') ? srcCanvas : packed.canvas;
-  const sheetBlob = await canvasToPngBlob(sheetCanvas);
-  zip.file((packed.mode==='none')?`${state}_source.png`:`${state}_sheet.png`, await sheetBlob.arrayBuffer());
-
-  const out=await zip.generateAsync({type:'blob'});
-  downloadBlob(out, `${state}_bundle.zip`);
-}
-
-// --- Playback ---
 function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
 function startTimer(){
   stopTimer();
   const fps=clamp(floorInt(el.fps.value,8),1,60);
   const ms=Math.floor(1000/fps);
-  const max=Math.max(0, getActiveFrames().length-1);
-
-  let dir = (el.dirMode.value==='reverse') ? -1 : 1;
-  pingDir = dir;
+  const max=Math.max(0, viewFrames.length-1);
+  const dir=(el.dirMode.value==='reverse')?-1:1;
+  pingDir=dir;
 
   timer=setInterval(()=>{
     if(max<=0){ draw(); return; }
-
     if(el.loopMode.value==='pingpong'){
       selected += pingDir;
       if(selected>=max){ selected=max; pingDir=-1; }
       if(selected<=0){ selected=0; pingDir=1; }
     } else {
       selected += dir;
-      if(selected>max){
-        if(el.loopMode.value==='once'){ selected=max; playing=false; stopTimer(); }
-        else selected=0;
-      }
-      if(selected<0){
-        if(el.loopMode.value==='once'){ selected=0; playing=false; stopTimer(); }
-        else selected=max;
-      }
+      if(selected>max){ if(el.loopMode.value==='once'){ selected=max; playing=false; stopTimer(); } else selected=0; }
+      if(selected<0){ if(el.loopMode.value==='once'){ selected=0; playing=false; stopTimer(); } else selected=max; }
     }
-
     el.frameIdx.value=String(selected);
     el.idxVal.textContent=String(selected);
     buildFilmstrip();
@@ -1086,7 +701,7 @@ function startTimer(){
 function togglePlay(){
   if(!img) return;
   playing=!playing;
-  el.btnPlay.textContent = playing ? '⏸ Pause' : '▶ Play / Pause';
+  el.btnPlay.textContent=playing?'⏸ Pause':'▶ Play / Pause';
   if(playing) startTimer(); else stopTimer();
 }
 
@@ -1095,10 +710,11 @@ function resetAll(){
   selected=0;
   el.frameIdx.value='0'; el.idxVal.textContent='0';
   el.fps.value='8'; el.fpsVal.textContent='8';
-  el.mode.value='colsrows'; setModeUI();
+  el.mode.value='colsrows';
   el.cols.value='4'; el.rows.value='1';
   el.fw.value='64'; el.fh.value='64';
   el.margin.value='0'; el.spacing.value='0';
+  el.order.value='row';
   el.px.value='0.5'; el.py.value='1.0';
   el.trim.checked=false;
   el.colorkey.checked=false;
@@ -1111,57 +727,264 @@ function resetAll(){
   el.loopMode.value='loop';
   el.dirMode.value='forward';
   el.rangeMode.value='all';
+  setModeUI();
   setRangeUI();
   recompute();
 }
 
-// --- Picking color from canvas ---
 function pickColorAtCanvas(x,y){
-  // Convert canvas click to source image coordinate
   if(!img) return;
   const z=Number(el.zoom.value);
   const iw=img.width*z, ih=img.height*z;
   const ox=(el.cv.width-iw)/2;
   const oy=(el.cv.height-ih)/2;
-  const sx = Math.floor((x-ox)/z);
-  const sy = Math.floor((y-oy)/z);
+  const sx=Math.floor((x-ox)/z);
+  const sy=Math.floor((y-oy)/z);
   if(sx<0||sy<0||sx>=img.width||sy>=img.height) return;
   const p=srcCtx.getImageData(sx,sy,1,1).data;
-  const hex = '#'+[p[0],p[1],p[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
-  el.keyColor.value = hex;
+  const hex='#'+[p[0],p[1],p[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  el.keyColor.value=hex;
 }
 
-// --- Wire events ---
+function downloadBlob(blob, filename){
+  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);
+  a.href=url; a.download=filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+
+function getFilePrefix(){
+  const raw=(el.state.value||'').trim();
+  return raw.length?raw:'sprite';
+}
+
+function getDurationMs(){
+  const fps=clamp(floorInt(el.fps.value,8),1,60);
+  return Math.floor(1000/fps);
+}
+
+function packGrid(sizes, pad){
+  const n=sizes.length; if(n===0) return {width:1,height:1,placements:[]};
+  const maxW=Math.max(...sizes.map(f=>f.w));
+  const maxH=Math.max(...sizes.map(f=>f.h));
+  const cols=Math.ceil(Math.sqrt(n));
+  const rows=Math.ceil(n/cols);
+  const width=cols*maxW + (cols+1)*pad;
+  const height=rows*maxH + (rows+1)*pad;
+  const placements=[];
+  for(let i=0;i<n;i++){
+    const c=i%cols, r=Math.floor(i/cols);
+    placements.push({x:pad+c*(maxW+pad), y:pad+r*(maxH+pad), w:sizes[i].w, h:sizes[i].h});
+  }
+  return {width,height,placements};
+}
+
+function packShelf(sizes, pad){
+  if(sizes.length===0) return {width:1,height:1,placements:[]};
+  const area=sizes.reduce((s,f)=>s+(f.w+pad)*(f.h+pad),0);
+  const targetW=Math.ceil(Math.sqrt(area));
+  let x=pad,y=pad,shelfH=0,usedW=pad;
+  const placements=[];
+  for(const f of sizes){
+    if(x+f.w+pad>targetW && x>pad){
+      y+=shelfH+pad;
+      x=pad;
+      shelfH=0;
+    }
+    placements.push({x,y,w:f.w,h:f.h});
+    x+=f.w+pad;
+    shelfH=Math.max(shelfH,f.h);
+    usedW=Math.max(usedW,x);
+  }
+  return {width:usedW+pad, height:y+shelfH+pad, placements};
+}
+
+function buildPackedSheet(){
+  const pad=clamp(floorInt(el.pad.value,2),0,999);
+  const active=viewFrames;
+
+  if(el.packMode.value==='none'){
+    const placements=active.map(fr=>({x:fr.x,y:fr.y,w:fr.w,h:fr.h}));
+    return {mode:'none', canvas:srcCanvas, width:img.width, height:img.height, placements};
+  }
+
+  const sizes=active.map(fr=>{
+    if(el.trim.checked && fr.trim) return {w:fr.trim.w,h:fr.trim.h};
+    return {w:fr.w,h:fr.h};
+  });
+
+  const pack = (el.packMode.value==='grid') ? packGrid(sizes, pad) : packShelf(sizes, pad);
+  let W=pack.width, H=pack.height;
+  if(el.pot.value==='yes'){ W=nextPow2(W); H=nextPow2(H); }
+
+  const out=document.createElement('canvas');
+  out.width=W; out.height=H;
+  const octx=out.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+  octx.clearRect(0,0,W,H);
+
+  const placements=[];
+  for(let i=0;i<active.length;i++){
+    const fr=active[i];
+    const p=pack.placements[i];
+    if(!p) continue;
+    if(el.trim.checked && fr.trim){
+      octx.drawImage(srcCanvas, fr.x+fr.trim.x, fr.y+fr.trim.y, fr.trim.w, fr.trim.h, p.x, p.y, fr.trim.w, fr.trim.h);
+      placements.push({x:p.x,y:p.y,w:fr.trim.w,h:fr.trim.h});
+    }else{
+      octx.drawImage(srcCanvas, fr.x, fr.y, fr.w, fr.h, p.x, p.y, fr.w, fr.h);
+      placements.push({x:p.x,y:p.y,w:fr.w,h:fr.h});
+    }
+  }
+
+  return {mode:el.packMode.value, canvas:out, width:W, height:H, placements};
+}
+
+async function canvasToPngBlob(c){
+  return await new Promise(res=>c.toBlob(res,'image/png'));
+}
+
+function makeSimpleJSON(sheetName, packed, packedFrames){
+  const duration=getDurationMs();
+  const px=Number(el.px.value), py=Number(el.py.value);
+  return {
+    file: getFilePrefix(),
+    sheet: sheetName,
+    image: { width: packed.width, height: packed.height },
+    source: { width: img.width, height: img.height },
+    pivot: { x: Number.isFinite(px)?px:0.5, y: Number.isFinite(py)?py:1.0 },
+    frames: viewFrames.map((src,i)=>{
+      const pf=packedFrames[i];
+      const t=(el.trim.checked && src.trim)?src.trim:null;
+      return {
+        index:i,
+        frame:{x:pf.x,y:pf.y,w:pf.w,h:pf.h},
+        duration_ms:duration,
+        sourceRect:{x:src.x,y:src.y,w:src.w,h:src.h},
+        ...(t?{trim:{x:t.x,y:t.y,w:t.w,h:t.h,offX:t.offX,offY:t.offY,srcW:t.srcW,srcH:t.srcH,empty:!!t.empty}}:{})
+      };
+    })
+  };
+}
+
+function makeTexturePackerJSON(sheetName, packed, packedFrames){
+  const prefix=getFilePrefix();
+  const out={
+    frames:{},
+    meta:{app:'Sprite Tool v2.1', image:sheetName, size:{w:packed.width,h:packed.height}, scale:'1'}
+  };
+  for(let i=0;i<viewFrames.length;i++){
+    const src=viewFrames[i];
+    const pf=packedFrames[i];
+    const key=`${prefix}_${String(i).padStart(3,'0')}.png`;
+    const t=(el.trim.checked && src.trim)?src.trim:null;
+    out.frames[key]={
+      frame:{x:pf.x,y:pf.y,w:pf.w,h:pf.h}, rotated:false, trimmed:!!t,
+      spriteSourceSize: t?{x:t.offX,y:t.offY,w:t.w,h:t.h}:{x:0,y:0,w:src.w,h:src.h},
+      sourceSize:{w:src.w,h:src.h}
+    };
+  }
+  return out;
+}
+
+async function exportJSON(){
+  if(!img) return;
+  const prefix=getFilePrefix();
+  const packed=buildPackedSheet();
+  const sheetName = (packed.mode==='none') ? '(source image)' : `${prefix}_sheet.png`;
+  const json = (el.jsonFmt.value==='tp') ? makeTexturePackerJSON(sheetName, packed, packed.placements) : makeSimpleJSON(sheetName, packed, packed.placements);
+  downloadBlob(new Blob([JSON.stringify(json,null,2)],{type:'application/json'}), `${prefix}.json`);
+}
+
+async function exportPackedSheet(){
+  if(!img) return;
+  const prefix=getFilePrefix();
+  const packed=buildPackedSheet();
+  const blob=await canvasToPngBlob((packed.mode==='none')?srcCanvas:packed.canvas);
+  downloadBlob(blob, (packed.mode==='none')?`${prefix}_source.png`:`${prefix}_sheet.png`);
+}
+
+async function exportFramesZip(){
+  if(!img) return;
+  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ หรือโดนบล็อก CDN'); return; }
+  const prefix=getFilePrefix();
+  const zip=new JSZip();
+
+  const off=document.createElement('canvas');
+  const octx=off.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+
+  for(let i=0;i<viewFrames.length;i++){
+    const fr=viewFrames[i];
+    const t=(el.trim.checked && fr.trim)?fr.trim:null;
+    const sx=fr.x+(t?t.x:0), sy=fr.y+(t?t.y:0);
+    const sw=(t?t.w:fr.w), sh=(t?t.h:fr.h);
+    off.width=sw; off.height=sh;
+    octx.clearRect(0,0,sw,sh);
+    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
+    zip.file(`${prefix}_${String(i).padStart(3,'0')}.png`, await blob.arrayBuffer());
+  }
+
+  downloadBlob(await zip.generateAsync({type:'blob'}), `${prefix}_frames.zip`);
+}
+
+async function exportAllZip(){
+  if(!img) return;
+  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ หรือโดนบล็อก CDN'); return; }
+  const prefix=getFilePrefix();
+  const zip=new JSZip();
+
+  // JSON
+  const packed=buildPackedSheet();
+  const sheetName = (packed.mode==='none') ? '(source image)' : `${prefix}_sheet.png`;
+  const json = (el.jsonFmt.value==='tp') ? makeTexturePackerJSON(sheetName, packed, packed.placements) : makeSimpleJSON(sheetName, packed, packed.placements);
+  zip.file(`${prefix}.json`, JSON.stringify(json,null,2));
+
+  // frames
+  const off=document.createElement('canvas');
+  const octx=off.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+  for(let i=0;i<viewFrames.length;i++){
+    const fr=viewFrames[i];
+    const t=(el.trim.checked && fr.trim)?fr.trim:null;
+    const sx=fr.x+(t?t.x:0), sy=fr.y+(t?t.y:0);
+    const sw=(t?t.w:fr.w), sh=(t?t.h:fr.h);
+    off.width=sw; off.height=sh;
+    octx.clearRect(0,0,sw,sh);
+    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
+    zip.file(`frames/${prefix}_${String(i).padStart(3,'0')}.png`, await blob.arrayBuffer());
+  }
+
+  // sheet
+  const sheetCanvas=(packed.mode==='none')?srcCanvas:packed.canvas;
+  const sheetBlob=await canvasToPngBlob(sheetCanvas);
+  zip.file((packed.mode==='none')?`${prefix}_source.png`:`${prefix}_sheet.png`, await sheetBlob.arrayBuffer());
+
+  downloadBlob(await zip.generateAsync({type:'blob'}), `${prefix}_bundle.zip`);
+}
+
+// Events
 el.mode.addEventListener('change', setModeUI);
 el.rangeMode.addEventListener('change', setRangeUI);
 
-for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt,el.px,el.py]){
+for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt]){
   e.addEventListener('input', recompute);
   e.addEventListener('change', recompute);
 }
 
-el.fps.addEventListener('input', ()=>{
-  el.fpsVal.textContent = el.fps.value;
-  if(playing) startTimer();
-});
-
-el.frameIdx.addEventListener('input', ()=>{
-  selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0,getActiveFrames().length-1));
-  el.idxVal.textContent=String(selected);
-  buildFilmstrip();
-  draw();
-});
-
+el.fps.addEventListener('input', ()=>{ el.fpsVal.textContent=el.fps.value; if(playing) startTimer(); });
+el.frameIdx.addEventListener('input', ()=>{ selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0,viewFrames.length-1)); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); });
 el.loopMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
 el.dirMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
 
-el.btnPlay.addEventListener('click', togglePlay);
-el.btnReset.addEventListener('click', resetAll);
+el.btnPlay.addEventListener('click', ()=>{ togglePlay(); });
+el.btnReset.addEventListener('click', ()=>{ resetAll(); });
 
 el.btnPivotBottom.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='1.00'; draw(); });
 el.btnPivotCenter.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='0.50'; draw(); });
-
-// redraw when user edits pivot manually
 el.px.addEventListener('input', draw);
 el.py.addEventListener('input', draw);
 
@@ -1179,58 +1002,36 @@ el.file.addEventListener('change', async ()=>{
   const f=el.file.files?.[0];
   if(!f) return;
   img=await loadImage(f);
-  enableUI(true);
-  el.btnPlay.textContent='▶ Play / Pause';
   playing=false; stopTimer();
   selected=0;
   el.frameIdx.value='0'; el.idxVal.textContent='0';
+  enableUI(true);
   recompute();
 });
 
 el.cv.addEventListener('click', (ev)=>{
+  if(!img) return;
+  if(!el.pickMode.checked) return;
   const rect=el.cv.getBoundingClientRect();
   const x=(ev.clientX-rect.left) * (el.cv.width/rect.width);
   const y=(ev.clientY-rect.top) * (el.cv.height/rect.height);
-  if(el.pickMode.checked){
-    pickColorAtCanvas(x,y);
-    // auto enable colorkey to make it obvious
-    el.colorkey.checked=true;
-    recompute();
-  }
+  pickColorAtCanvas(x,y);
+  el.colorkey.checked=true;
+  recompute();
 });
 
-// Keyboard
 window.addEventListener('keydown', (e)=>{
-  if(e.code==='Space'){
-    e.preventDefault();
-    if(!el.btnPlay.disabled) togglePlay();
-  }
-  if(e.code==='ArrowRight'){
-    if(!img) return;
-    const max=Math.max(0,getActiveFrames().length-1);
-    selected=clamp(selected+1,0,max);
-    el.frameIdx.value=String(selected);
-    el.idxVal.textContent=String(selected);
-    buildFilmstrip();
-    draw();
-  }
-  if(e.code==='ArrowLeft'){
-    if(!img) return;
-    const max=Math.max(0,getActiveFrames().length-1);
-    selected=clamp(selected-1,0,max);
-    el.frameIdx.value=String(selected);
-    el.idxVal.textContent=String(selected);
-    buildFilmstrip();
-    draw();
-  }
+  if(e.code==='Space'){ e.preventDefault(); if(!el.btnPlay.disabled) togglePlay(); }
+  if(e.code==='ArrowRight'){ if(!img) return; selected=clamp(selected+1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); }
+  if(e.code==='ArrowLeft'){ if(!img) return; selected=clamp(selected-1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); }
 });
 
 // Init
 enableUI(false);
+el.fpsVal.textContent=el.fps.value;
 setModeUI();
 setRangeUI();
-el.fpsVal.textContent=el.fps.value;
-
+paintChecker(pctx, el.prev.width, el.prev.height);
 </script>
 </body>
 </html>
