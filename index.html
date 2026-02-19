@@ -3,442 +3,1196 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sprite Tool (Grid Cutter + Preview + Export)</title>
+  <title>Sprite Tool v2 — Cut • Preview • Trim • Pack • Export</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; padding: 16px; background: #0b0f14; color: #e6edf3; }
-    h1 { margin: 0 0 8px; font-size: 18px; }
-    .wrap { display: grid; grid-template-columns: 360px 1fr; gap: 12px; }
-    .card { background: #111824; border: 1px solid #233044; border-radius: 14px; padding: 12px; }
-    label { display: block; font-size: 12px; opacity: .9; margin: 10px 0 6px; }
-    input[type="number"], input[type="text"], select {
-      width: 100%; box-sizing: border-box;
-      background: #0b1220; color: #e6edf3;
-      border: 1px solid #233044; border-radius: 10px;
-      padding: 10px;
+    :root{
+      --bg:#0b0f14; --panel:#111824; --panel2:#0b1220; --bd:#233044;
+      --text:#e6edf3; --muted:rgba(230,237,243,.75);
+      --accent:#1f6feb; --accent2:#2d384a; --bad:#ff5050;
+      --r:16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color-scheme: dark;
     }
-    input[type="range"] { width: 100%; }
-    button {
-      width: 100%; padding: 10px; margin-top: 10px;
-      background: #1f6feb; color: white; border: 0;
-      border-radius: 10px; cursor: pointer;
-      font-weight: 600;
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--text);}
+    header{padding:14px 16px; border-bottom:1px solid var(--bd); background:linear-gradient(180deg, rgba(17,24,36,.95), rgba(11,15,20,.92)); position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);}
+    header .top{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    h1{margin:0; font-size:16px; letter-spacing:.2px;}
+    .sub{font-size:12px; color:var(--muted)}
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--bd); border-radius:999px; background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)}
+    .wrap{display:grid; grid-template-columns: 380px 1fr; gap:12px; padding:12px 16px 16px;}
+    @media (max-width: 1050px){.wrap{grid-template-columns:1fr;}}
+
+    .card{background:var(--panel); border:1px solid var(--bd); border-radius:var(--r); padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,.25)}
+    .card h2{margin:0 0 8px; font-size:13px; color:var(--muted); font-weight:650; letter-spacing:.2px}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
+    .hr{height:1px; background:var(--bd); margin:12px 0;}
+
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
+    input[type="number"], input[type="text"], select{
+      width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--bd);
+      background:var(--panel2); color:var(--text);
+      outline:none;
     }
-    button.secondary { background: #2d384a; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .small { font-size: 12px; opacity: .85; line-height: 1.4; }
-    canvas { width: 100%; background: #0b1220; border: 1px solid #233044; border-radius: 14px; }
-    .pill { display:inline-block; padding: 2px 8px; border: 1px solid #233044; border-radius: 999px; font-size: 12px; opacity: .9; }
-    .hr { height: 1px; background: #233044; margin: 12px 0; }
+    input[type="number"]:focus, input[type="text"]:focus, select:focus{border-color:rgba(31,111,235,.85)}
+    input[type="range"]{width:100%}
+
+    .btnrow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    button{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--bd);
+      background:var(--accent); color:white; cursor:pointer; font-weight:650;
+    }
+    button.secondary{background:var(--accent2)}
+    button.ghost{background:transparent}
+    button:disabled{opacity:.55; cursor:not-allowed}
+
+    .hint{font-size:12px; color:var(--muted); line-height:1.4}
+    .hint b{color:var(--text)}
+
+    /* Right side */
+    .stage{display:grid; grid-template-rows: auto 1fr auto; gap:10px;}
+    .toolbar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .toolbar .group{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
+    .toggle{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--bd); border-radius:12px; background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)}
+    .toggle input{accent-color: var(--accent)}
+
+    canvas{width:100%; background:var(--panel2); border:1px solid var(--bd); border-radius:var(--r);}
+
+    .filmstrip{display:flex; gap:8px; overflow:auto; padding:8px; border:1px solid var(--bd); border-radius:var(--r); background:rgba(11,18,32,.6)}
+    .thumb{width:74px; min-width:74px; border:1px solid rgba(35,48,68,.9); border-radius:12px; background:rgba(0,0,0,.25); display:flex; flex-direction:column; gap:6px; padding:6px; cursor:pointer}
+    .thumb.sel{outline:2px solid rgba(31,111,235,.95);}
+    .thumb canvas{width:100%; height:auto; border:0; border-radius:10px; background:transparent}
+    .thumb .t{font-size:11px; color:var(--muted); text-align:center}
+
+    .kbd{font-size:11px; padding:2px 6px; border:1px solid var(--bd); border-radius:8px; background:rgba(11,18,32,.6); color:var(--muted)}
   </style>
 </head>
 <body>
-  <h1>Sprite Tool — Grid Cutter + Preview + Export</h1>
-  <div class="small">
-    ทำงานในเบราว์เซอร์ (local) • ไม่อัปโหลดรูปออก • เหมาะกับเครื่องที่ติดข้อจำกัด
+<header>
+  <div class="top">
+    <div>
+      <h1>Sprite Tool v2 — Cut • Preview • Trim • Pack • Export</h1>
+      <div class="sub">รันในเบราว์เซอร์ (local) • ไม่อัปโหลดรูปออก • คลิกบนภาพย่อยเพื่อกำหนด pivot • รองรับ Trim/Pack/JSON</div>
+    </div>
+    <div class="pill"><span id="imgInfo">No image</span> • <span id="frameInfo">0 frames</span></div>
   </div>
+</header>
 
-  <div class="wrap" style="margin-top:12px;">
-    <div class="card">
-      <label>1) ใส่รูป (PNG แนะนำ)</label>
-      <input id="file" type="file" accept="image/*" />
+<div class="wrap">
+  <!-- LEFT PANEL -->
+  <div class="card">
+    <h2>Input</h2>
+    <label>ใส่รูป (PNG แนะนำ)</label>
+    <input id="file" type="file" accept="image/*" />
 
-      <div class="hr"></div>
+    <div class="hr"></div>
 
-      <label>2) โหมดการตัด</label>
-      <select id="mode">
-        <option value="colsrows">กำหนด Columns + Rows</option>
-        <option value="framesize">กำหนด Frame Width + Height</option>
-      </select>
+    <h2>Cut settings</h2>
+    <label>โหมดการตัด</label>
+    <select id="mode">
+      <option value="colsrows">กำหนด Columns + Rows</option>
+      <option value="framesize">กำหนด Frame Width + Height</option>
+    </select>
 
-      <div id="colsrowsBox">
-        <div class="row">
-          <div>
-            <label>Columns</label>
-            <input id="cols" type="number" min="1" value="4" />
-          </div>
-          <div>
-            <label>Rows</label>
-            <input id="rows" type="number" min="1" value="1" />
-          </div>
-        </div>
-      </div>
-
-      <div id="framesizeBox" style="display:none;">
-        <div class="row">
-          <div>
-            <label>Frame Width (px)</label>
-            <input id="fw" type="number" min="1" value="64" />
-          </div>
-          <div>
-            <label>Frame Height (px)</label>
-            <input id="fh" type="number" min="1" value="64" />
-          </div>
-        </div>
-      </div>
-
+    <div id="colsrowsBox">
       <div class="row">
         <div>
-          <label>Margin (px)</label>
-          <input id="margin" type="number" min="0" value="0" />
+          <label>Columns</label>
+          <input id="cols" type="number" min="1" value="4" />
         </div>
         <div>
-          <label>Spacing (px)</label>
-          <input id="spacing" type="number" min="0" value="0" />
+          <label>Rows</label>
+          <input id="rows" type="number" min="1" value="1" />
         </div>
       </div>
+    </div>
 
-      <label>3) Pivot (สำหรับกัน “ตัวละครเด้ง”) — ค่าเป็นสัดส่วน 0..1</label>
+    <div id="framesizeBox" style="display:none;">
       <div class="row">
         <div>
-          <label>Pivot X</label>
-          <input id="px" type="number" step="0.01" min="0" max="1" value="0.5" />
+          <label>Frame Width (px)</label>
+          <input id="fw" type="number" min="1" value="64" />
         </div>
         <div>
-          <label>Pivot Y</label>
-          <input id="py" type="number" step="0.01" min="0" max="1" value="1.0" />
+          <label>Frame Height (px)</label>
+          <input id="fh" type="number" min="1" value="64" />
         </div>
       </div>
+      <div class="hint">ระบบจะคำนวณ cols/rows จากขนาดภาพให้อัตโนมัติ (คง margin/spacing)</div>
+    </div>
 
-      <div class="hr"></div>
-
-      <label>4) Preview</label>
-      <div class="row">
-        <div>
-          <label>FPS: <span class="pill" id="fpsVal">8</span></label>
-          <input id="fps" type="range" min="1" max="24" value="8" />
-        </div>
-        <div>
-          <label>Frame Index: <span class="pill" id="idxVal">0</span></label>
-          <input id="frameIdx" type="range" min="0" max="0" value="0" />
-        </div>
+    <div class="row">
+      <div>
+        <label>Margin (px)</label>
+        <input id="margin" type="number" min="0" value="0" />
       </div>
+      <div>
+        <label>Spacing (px)</label>
+        <input id="spacing" type="number" min="0" value="0" />
+      </div>
+    </div>
 
+    <div class="row">
+      <div>
+        <label>Order</label>
+        <select id="order">
+          <option value="row">Row-major (ซ้าย→ขวา แล้วลงบรรทัด)</option>
+          <option value="col">Col-major (บน→ล่าง แล้วไปคอลัมน์ถัดไป)</option>
+        </select>
+      </div>
+      <div>
+        <label>Frame Range</label>
+        <select id="rangeMode">
+          <option value="all">ทั้งหมด</option>
+          <option value="custom">กำหนด Start/End</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="rangeBox" class="row" style="display:none;">
+      <div>
+        <label>Start index</label>
+        <input id="rangeStart" type="number" min="0" value="0" />
+      </div>
+      <div>
+        <label>End index (รวม)</label>
+        <input id="rangeEnd" type="number" min="0" value="0" />
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <h2>Pivot & Trim</h2>
+    <div class="row">
+      <div>
+        <label>Pivot X (0..1)</label>
+        <input id="px" type="number" step="0.01" min="0" max="1" value="0.5" />
+      </div>
+      <div>
+        <label>Pivot Y (0..1)</label>
+        <input id="py" type="number" step="0.01" min="0" max="1" value="1.0" />
+      </div>
+    </div>
+    <div class="btnrow">
+      <button id="btnPivotBottom" class="secondary" disabled>Pivot = Bottom-Center</button>
+      <button id="btnPivotCenter" class="secondary" disabled>Pivot = Center</button>
+    </div>
+
+    <label class="toggle" style="margin-top:10px;">
+      <input id="trim" type="checkbox" />
+      <span><b>Trim</b> โปร่งใสออก (ต่อเฟรม) + เก็บ offset/size ใน JSON</span>
+    </label>
+
+    <label class="toggle">
+      <input id="colorkey" type="checkbox" />
+      <span><b>Color key</b> ลบสีพื้นหลัง (เลือกสีด้วย Eyedropper)</span>
+    </label>
+
+    <div class="row" style="align-items:center;">
+      <div>
+        <label>Key color</label>
+        <input id="keyColor" type="text" value="#000000" />
+      </div>
+      <div>
+        <label>Tolerance (0..255)</label>
+        <input id="keyTol" type="number" min="0" max="255" value="20" />
+      </div>
+    </div>
+    <div class="hint">Tip: เปิด <b>Color key</b> แล้วกดปุ่ม <b>Pick</b> จากด้านขวาเพื่อดูดสี</div>
+
+    <div class="hr"></div>
+
+    <h2>Preview</h2>
+    <div class="row">
+      <div>
+        <label>FPS: <span class="pill" id="fpsVal">8</span></label>
+        <input id="fps" type="range" min="1" max="30" value="8" />
+      </div>
+      <div>
+        <label>Frame index: <span class="pill" id="idxVal">0</span></label>
+        <input id="frameIdx" type="range" min="0" max="0" value="0" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Loop</label>
+        <select id="loopMode">
+          <option value="loop">Loop</option>
+          <option value="pingpong">Ping-pong</option>
+          <option value="once">Once</option>
+        </select>
+      </div>
+      <div>
+        <label>Direction</label>
+        <select id="dirMode">
+          <option value="forward">Forward</option>
+          <option value="reverse">Reverse</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btnrow">
       <button id="btnPlay" class="secondary" disabled>▶ Play / Pause</button>
+      <button id="btnReset" class="ghost" disabled>Reset</button>
+    </div>
 
-      <div class="hr"></div>
+    <div class="hr"></div>
 
-      <label>5) Export</label>
-      <input id="state" type="text" value="walk" placeholder="state name เช่น idle/walk/run/sleep/dead" />
-      <button id="btnJSON" disabled>Export JSON metadata</button>
-      <button id="btnZIP" disabled>Download frames (ZIP)</button>
+    <h2>Export</h2>
+    <label>State name (เช่น idle/walk/run/sleep/dead)</label>
+    <input id="state" type="text" value="walk" />
 
-      <div class="small" style="margin-top:10px; opacity:.8">
-        หมายเหตุ: ZIP จะถูกสร้างในเบราว์เซอร์ อาจช้าถ้าเฟรมเยอะมาก
+    <div class="row">
+      <div>
+        <label>Pack sprite sheet</label>
+        <select id="packMode">
+          <option value="none">ไม่ pack (ใช้ภาพเดิม)</option>
+          <option value="grid">Pack เป็น grid ใหม่</option>
+          <option value="shelf">Pack แบบ shelf (ประหยัดพื้นที่)</option>
+        </select>
+      </div>
+      <div>
+        <label>Padding (px)</label>
+        <input id="pad" type="number" min="0" value="2" />
       </div>
     </div>
 
-    <div class="card">
-      <div class="row" style="align-items:center;">
-        <div class="small">
-          <b>Preview Canvas</b><br/>
-          แสดงกริด + pivot (จุดสีแดง) + bounding ของเฟรมที่เลือก
-        </div>
-        <div style="text-align:right;">
-          <span class="pill" id="imgInfo">No image</span>
-        </div>
+    <div class="row">
+      <div>
+        <label>Power-of-two (POT)</label>
+        <select id="pot">
+          <option value="no">No</option>
+          <option value="yes">Yes (ขยายเป็น 2^n)</option>
+        </select>
       </div>
-      <div style="margin-top:10px;">
-        <canvas id="cv" width="960" height="540"></canvas>
+      <div>
+        <label>JSON format</label>
+        <select id="jsonFmt">
+          <option value="simple">Simple (state + frames + pivot)</option>
+          <option value="tp">TexturePacker-ish (frames object)</option>
+        </select>
       </div>
+    </div>
+
+    <div class="btnrow">
+      <button id="btnJSON" disabled>Export JSON</button>
+      <button id="btnZIP" disabled>Download Frames (ZIP)</button>
+    </div>
+    <div class="btnrow">
+      <button id="btnSheet" disabled>Download Packed Sheet (PNG)</button>
+      <button id="btnAll" class="secondary" disabled>Download ALL (ZIP)</button>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">
+      <b>คีย์ลัด:</b> <span class="kbd">Space</span> play/pause • <span class="kbd">←</span>/<span class="kbd">→</span> เปลี่ยนเฟรม • คลิกบน thumbnail เพื่อเลือกเฟรม
     </div>
   </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="card stage">
+    <div class="toolbar">
+      <div class="group">
+        <span class="pill">Canvas</span>
+        <label class="toggle"><input id="showGrid" type="checkbox" checked/> Show grid</label>
+        <label class="toggle"><input id="showPivot" type="checkbox" checked/> Show pivot</label>
+        <label class="toggle"><input id="pickMode" type="checkbox"/> Pick color</label>
+      </div>
+      <div class="group">
+        <span class="pill">Zoom: <span id="zoomVal">1.0x</span></span>
+        <input id="zoom" type="range" min="0.25" max="6" value="1" step="0.05" style="width:220px" />
+        <select id="bg">
+          <option value="checker">Checker</option>
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+    </div>
+
+    <canvas id="cv" width="1200" height="720"></canvas>
+
+    <div>
+      <div class="hint" style="margin-bottom:8px;">Filmstrip (คลิกเพื่อเลือกเฟรม • คลิกใน thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก)</div>
+      <div id="strip" class="filmstrip"></div>
+    </div>
+  </div>
+</div>
 
 <script>
-// --- Minimal JSZip (loaded from CDN) ---
-const jszipScript = document.createElement('script');
-jszipScript.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
-jszipScript.onload = () => window.__zipReady = true;
-document.head.appendChild(jszipScript);
+// --- Dependencies (JSZip) ---
+(function loadZip(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+  document.head.appendChild(s);
+})();
 
-const el = (id) => document.getElementById(id);
-const fileEl = el('file');
-const modeEl = el('mode');
-const colsEl = el('cols');
-const rowsEl = el('rows');
-const fwEl = el('fw');
-const fhEl = el('fh');
-const marginEl = el('margin');
-const spacingEl = el('spacing');
-const pxEl = el('px');
-const pyEl = el('py');
-const fpsEl = el('fps');
-const fpsVal = el('fpsVal');
-const frameIdxEl = el('frameIdx');
-const idxVal = el('idxVal');
-const btnPlay = el('btnPlay');
-const btnJSON = el('btnJSON');
-const btnZIP = el('btnZIP');
-const stateEl = el('state');
-const imgInfo = el('imgInfo');
+// --- Utils ---
+const $ = (id)=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const floorInt=(v,def=0)=>{const n=Math.floor(Number(v)); return Number.isFinite(n)?n:def;};
+const nextPow2=(n)=>{let p=1; while(p<n) p<<=1; return p;};
+const hexToRgb=(hex)=>{
+  const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i);
+  if(!m) return {r:0,g:0,b:0};
+  const x=parseInt(m[1],16);
+  return {r:(x>>16)&255, g:(x>>8)&255, b:x&255};
+};
 
-const colsrowsBox = el('colsrowsBox');
-const framesizeBox = el('framesizeBox');
+// --- Elements ---
+const el={
+  file: $('file'),
+  mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
+  margin: $('margin'), spacing: $('spacing'),
+  order: $('order'), rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'),
+  px: $('px'), py: $('py'), btnPivotBottom: $('btnPivotBottom'), btnPivotCenter: $('btnPivotCenter'),
+  trim: $('trim'), colorkey: $('colorkey'), keyColor: $('keyColor'), keyTol: $('keyTol'),
+  fps: $('fps'), fpsVal: $('fpsVal'), frameIdx: $('frameIdx'), idxVal: $('idxVal'),
+  loopMode: $('loopMode'), dirMode: $('dirMode'),
+  btnPlay: $('btnPlay'), btnReset: $('btnReset'),
+  state: $('state'), packMode: $('packMode'), pad: $('pad'), pot: $('pot'), jsonFmt: $('jsonFmt'),
+  btnJSON: $('btnJSON'), btnZIP: $('btnZIP'), btnSheet: $('btnSheet'), btnAll: $('btnAll'),
+  showGrid: $('showGrid'), showPivot: $('showPivot'), pickMode: $('pickMode'),
+  zoom: $('zoom'), zoomVal: $('zoomVal'), bg: $('bg'),
+  imgInfo: $('imgInfo'), frameInfo: $('frameInfo'),
+  colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'), rangeBox: $('rangeBox'),
+  cv: $('cv'), strip: $('strip')
+};
 
-const cv = el('cv');
-const ctx = cv.getContext('2d');
+const ctx = el.cv.getContext('2d');
+let img=null;              // Image
+let srcCanvas=null;        // Offscreen canvas of source
+let srcCtx=null;
+let frames=[];             // computed frames: {x,y,w,h, trim?:{x,y,w,h,offX,offY,srcW,srcH}}
+let viewFrames=[];         // frames after applying range
+let selected=0;
+let playing=false;
+let timer=null;
+let pingDir=1;
 
-let img = null;
-let frames = []; // {x,y,w,h}
-let playing = false;
-let timer = null;
+function enableUI(on){
+  for(const id of ['btnPlay','btnReset','btnJSON','btnZIP','btnSheet','btnAll','btnPivotBottom','btnPivotCenter']){
+    el[id].disabled = !on;
+  }
+}
 
-function setModeUI() {
-  const m = modeEl.value;
-  colsrowsBox.style.display = m === 'colsrows' ? '' : 'none';
-  framesizeBox.style.display = m === 'framesize' ? '' : 'none';
+function setModeUI(){
+  const m=el.mode.value;
+  el.colsrowsBox.style.display = m==='colsrows' ? '' : 'none';
+  el.framesizeBox.style.display = m==='framesize' ? '' : 'none';
   recompute();
 }
 
-modeEl.addEventListener('change', setModeUI);
-
-function loadImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const i = new Image();
-    i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
-    i.onerror = reject;
-    i.src = url;
-  });
-}
-
-fileEl.addEventListener('change', async () => {
-  const f = fileEl.files?.[0];
-  if (!f) return;
-  img = await loadImage(f);
-  imgInfo.textContent = `${img.width}x${img.height}px`;
+function setRangeUI(){
+  el.rangeBox.style.display = el.rangeMode.value==='custom' ? '' : 'none';
   recompute();
-  btnPlay.disabled = false;
-  btnJSON.disabled = false;
-  btnZIP.disabled = false;
-});
-
-function clampInt(v, min, max) {
-  v = Math.floor(Number(v));
-  if (Number.isNaN(v)) return min;
-  return Math.max(min, Math.min(max, v));
 }
 
-function recompute() {
-  if (!img) { draw(); return; }
-  const margin = clampInt(marginEl.value, 0, 9999);
-  const spacing = clampInt(spacingEl.value, 0, 9999);
+async function loadImage(file){
+  const url=URL.createObjectURL(file);
+  const i=new Image();
+  i.decoding='async';
+  await new Promise((res,rej)=>{i.onload=res; i.onerror=rej; i.src=url;});
+  URL.revokeObjectURL(url);
+  return i;
+}
 
-  frames = [];
-  if (modeEl.value === 'colsrows') {
-    const cols = clampInt(colsEl.value, 1, 9999);
-    const rows = clampInt(rowsEl.value, 1, 9999);
-    const w = Math.floor((img.width - 2*margin - (cols-1)*spacing) / cols);
-    const h = Math.floor((img.height - 2*margin - (rows-1)*spacing) / rows);
+function buildSrcCanvas(){
+  srcCanvas=document.createElement('canvas');
+  srcCanvas.width=img.width;
+  srcCanvas.height=img.height;
+  srcCtx=srcCanvas.getContext('2d');
+  srcCtx.imageSmoothingEnabled=false;
+  srcCtx.clearRect(0,0,img.width,img.height);
+  srcCtx.drawImage(img,0,0);
+}
 
-    for (let r=0; r<rows; r++) {
-      for (let c=0; c<cols; c++) {
-        const x = margin + c*(w+spacing);
-        const y = margin + r*(h+spacing);
-        frames.push({x,y,w,h});
+function applyColorKeyIfNeeded(){
+  if(!el.colorkey.checked) return;
+  const {r:kr,g:kg,b:kb} = hexToRgb(el.keyColor.value);
+  const tol=clamp(floorInt(el.keyTol.value,20),0,255);
+  const im=srcCtx.getImageData(0,0,srcCanvas.width,srcCanvas.height);
+  const d=im.data;
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    if(Math.abs(r-kr)<=tol && Math.abs(g-kg)<=tol && Math.abs(b-kb)<=tol){
+      d[i+3]=0;
+    }
+  }
+  srcCtx.putImageData(im,0,0);
+}
+
+function computeGridFrames(){
+  if(!img) return [];
+  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
+  let out=[];
+
+  if(el.mode.value==='colsrows'){
+    const cols=clamp(floorInt(el.cols.value,1),1,99999);
+    const rows=clamp(floorInt(el.rows.value,1),1,99999);
+    const w=Math.floor((img.width - 2*margin - (cols-1)*spacing) / cols);
+    const h=Math.floor((img.height - 2*margin - (rows-1)*spacing) / rows);
+
+    if(w<=0 || h<=0) return [];
+
+    if(el.order.value==='row'){
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        out.push({x: margin + c*(w+spacing), y: margin + r*(h+spacing), w, h});
+      }
+    } else {
+      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
+        out.push({x: margin + c*(w+spacing), y: margin + r*(h+spacing), w, h});
       }
     }
   } else {
-    const fw = clampInt(fwEl.value, 1, img.width);
-    const fh = clampInt(fhEl.value, 1, img.height);
-    const cols = Math.floor((img.width - 2*margin + spacing) / (fw + spacing));
-    const rows = Math.floor((img.height - 2*margin + spacing) / (fh + spacing));
+    const fw=clamp(floorInt(el.fw.value,64),1,img.width);
+    const fh=clamp(floorInt(el.fh.value,64),1,img.height);
+    const cols=Math.floor((img.width - 2*margin + spacing) / (fw + spacing));
+    const rows=Math.floor((img.height - 2*margin + spacing) / (fh + spacing));
 
-    for (let r=0; r<rows; r++) {
-      for (let c=0; c<cols; c++) {
-        const x = margin + c*(fw+spacing);
-        const y = margin + r*(fh+spacing);
-        if (x+fw <= img.width - margin + 1 && y+fh <= img.height - margin + 1) {
-          frames.push({x,y,w:fw,h:fh});
-        }
+    if(cols<=0 || rows<=0) return [];
+
+    const gen=(r,c)=>({x: margin + c*(fw+spacing), y: margin + r*(fh+spacing), w: fw, h: fh});
+
+    if(el.order.value==='row'){
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const fr=gen(r,c);
+        if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
+      }
+    } else {
+      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
+        const fr=gen(r,c);
+        if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
+      }
+    }
+
+    // keep cols/rows inputs in sync (display-only via placeholders)
+    el.cols.placeholder=String(cols);
+    el.rows.placeholder=String(rows);
+  }
+  return out;
+}
+
+function computeTrimForFrame(fr){
+  // Find bbox of non-transparent pixels inside the frame.
+  // Return trim meta with offsets.
+  const im=srcCtx.getImageData(fr.x, fr.y, fr.w, fr.h);
+  const d=im.data;
+  let minX=fr.w, minY=fr.h, maxX=-1, maxY=-1;
+  for(let y=0;y<fr.h;y++){
+    for(let x=0;x<fr.w;x++){
+      const a=d[(y*fr.w + x)*4 + 3];
+      if(a!==0){
+        if(x<minX) minX=x;
+        if(y<minY) minY=y;
+        if(x>maxX) maxX=x;
+        if(y>maxY) maxY=y;
       }
     }
   }
+  if(maxX<minX || maxY<minY){
+    // fully transparent → keep 1x1 to avoid zero size
+    return {x:0,y:0,w:1,h:1, offX:0, offY:0, srcW:fr.w, srcH:fr.h, empty:true};
+  }
+  const w=maxX-minX+1, h=maxY-minY+1;
+  return {x:minX,y:minY,w,h, offX:minX, offY:minY, srcW:fr.w, srcH:fr.h, empty:false};
+}
 
-  frameIdxEl.max = String(Math.max(0, frames.length - 1));
-  frameIdxEl.value = String(Math.min(Number(frameIdxEl.value), Number(frameIdxEl.max)));
-  idxVal.textContent = frameIdxEl.value;
+function applyRange(list){
+  if(el.rangeMode.value!=='custom') return list;
+  const s=clamp(floorInt(el.rangeStart.value,0),0,Math.max(0,list.length-1));
+  const e=clamp(floorInt(el.rangeEnd.value,0),0,Math.max(0,list.length-1));
+  const a=Math.min(s,e), b=Math.max(s,e);
+  return list.slice(a,b+1);
+}
+
+function recompute(){
+  if(!img){ draw(); return; }
+
+  // rebuild source canvas each time to re-apply color key deterministically
+  buildSrcCanvas();
+  applyColorKeyIfNeeded();
+
+  frames = computeGridFrames();
+
+  // compute trim meta if enabled
+  if(el.trim.checked){
+    for(const fr of frames){ fr.trim = computeTrimForFrame(fr); }
+  } else {
+    for(const fr of frames){ delete fr.trim; }
+  }
+
+  viewFrames = applyRange(frames);
+
+  // update slider
+  el.frameIdx.max = String(Math.max(0, viewFrames.length-1));
+  selected = clamp(floorInt(el.frameIdx.value,0), 0, Math.max(0, viewFrames.length-1));
+  el.frameIdx.value = String(selected);
+  el.idxVal.textContent = String(selected);
+
+  // update range bounds
+  el.rangeStart.max = String(Math.max(0, frames.length-1));
+  el.rangeEnd.max = String(Math.max(0, frames.length-1));
+  if(el.rangeMode.value==='custom'){
+    el.rangeEnd.value = String(clamp(floorInt(el.rangeEnd.value,0), 0, Math.max(0, frames.length-1)));
+  }
+
+  // info
+  el.imgInfo.textContent = `${img.width}×${img.height}px`;
+  el.frameInfo.textContent = `${viewFrames.length} frames`;
+
+  // filmstrip
+  buildFilmstrip();
+
+  // enable
+  enableUI(true);
 
   draw();
 }
 
-[colsEl, rowsEl, fwEl, fhEl, marginEl, spacingEl, pxEl, pyEl].forEach(e => e.addEventListener('input', recompute));
+function bgPaint(){
+  const w=el.cv.width, h=el.cv.height;
+  if(el.bg.value==='checker'){
+    const s=24;
+    ctx.fillStyle='#0b1220';
+    ctx.fillRect(0,0,w,h);
+    for(let y=0;y<h;y+=s){
+      for(let x=0;x<w;x+=s){
+        const even=((x/s)+(y/s))%2===0;
+        ctx.fillStyle=even?'rgba(255,255,255,.06)':'rgba(0,0,0,.10)';
+        ctx.fillRect(x,y,s,s);
+      }
+    }
+  } else if(el.bg.value==='light'){
+    ctx.fillStyle='#e9eef6';
+    ctx.fillRect(0,0,w,h);
+  } else {
+    ctx.fillStyle='#0b1220';
+    ctx.fillRect(0,0,w,h);
+  }
+}
 
-fpsEl.addEventListener('input', () => {
-  fpsVal.textContent = fpsEl.value;
-  if (playing) startTimer();
-});
-
-frameIdxEl.addEventListener('input', () => {
-  idxVal.textContent = frameIdxEl.value;
-  draw();
-});
-
-function draw() {
-  // clear
-  ctx.clearRect(0,0,cv.width,cv.height);
-  // background grid
-  ctx.fillStyle = '#0b1220';
-  ctx.fillRect(0,0,cv.width,cv.height);
-
-  if (!img) {
-    ctx.fillStyle = '#e6edf3';
-    ctx.font = '16px system-ui';
+function draw(){
+  bgPaint();
+  if(!img){
+    ctx.fillStyle='#e6edf3';
+    ctx.font='16px system-ui';
     ctx.fillText('อัปโหลดรูปเพื่อเริ่ม', 20, 40);
     return;
   }
 
-  // Fit image to canvas
-  const scale = Math.min(cv.width / img.width, cv.height / img.height);
-  const ox = (cv.width - img.width*scale)/2;
-  const oy = (cv.height - img.height*scale)/2;
+  const z=Number(el.zoom.value);
+  el.zoomVal.textContent = `${z.toFixed(2)}x`;
 
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, ox, oy, img.width*scale, img.height*scale);
+  // center image
+  const iw=img.width*z, ih=img.height*z;
+  const ox=(el.cv.width-iw)/2;
+  const oy=(el.cv.height-ih)/2;
 
-  // draw frame rects
-  ctx.strokeStyle = 'rgba(180, 200, 255, 0.35)';
-  ctx.lineWidth = 1;
-  for (const fr of frames) {
-    ctx.strokeRect(ox + fr.x*scale, oy + fr.y*scale, fr.w*scale, fr.h*scale);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(srcCanvas, ox, oy, iw, ih);
+
+  if(el.showGrid.checked){
+    ctx.strokeStyle='rgba(180,200,255,.22)';
+    ctx.lineWidth=1;
+    for(const fr of viewFrames){
+      ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
+    }
   }
 
-  const idx = clampInt(frameIdxEl.value, 0, Math.max(0, frames.length-1));
-  const fr = frames[idx];
-  if (fr) {
-    // highlight selected frame
-    ctx.strokeStyle = 'rgba(31, 111, 235, 0.95)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(ox + fr.x*scale, oy + fr.y*scale, fr.w*scale, fr.h*scale);
+  const fr=viewFrames[selected];
+  if(fr){
+    // highlight
+    ctx.strokeStyle='rgba(31,111,235,.95)';
+    ctx.lineWidth=2;
+    ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
+
+    // draw trim bbox
+    if(el.trim.checked && fr.trim && !fr.trim.empty){
+      ctx.strokeStyle='rgba(255,255,255,.65)';
+      ctx.lineWidth=1.5;
+      ctx.strokeRect(ox+(fr.x+fr.trim.x)*z, oy+(fr.y+fr.trim.y)*z, fr.trim.w*z, fr.trim.h*z);
+    }
 
     // pivot
-    const px = Number(pxEl.value);
-    const py = Number(pyEl.value);
-    const pivotX = fr.x + fr.w * (Number.isFinite(px) ? px : 0.5);
-    const pivotY = fr.y + fr.h * (Number.isFinite(py) ? py : 1.0);
+    if(el.showPivot.checked){
+      const px=Number(el.px.value); const py=Number(el.py.value);
+      const pivotX = fr.x + fr.w * (Number.isFinite(px)?px:0.5);
+      const pivotY = fr.y + fr.h * (Number.isFinite(py)?py:1.0);
+      ctx.fillStyle='rgba(255,80,80,.95)';
+      ctx.beginPath();
+      ctx.arc(ox+pivotX*z, oy+pivotY*z, 5, 0, Math.PI*2);
+      ctx.fill();
+    }
 
-    ctx.fillStyle = 'rgba(255, 80, 80, 0.95)';
-    ctx.beginPath();
-    ctx.arc(ox + pivotX*scale, oy + pivotY*scale, 4, 0, Math.PI*2);
-    ctx.fill();
-  }
+    // Selected frame preview box
+    const pad=14;
+    const boxW=280, boxH=280;
+    const bx=pad, by=el.cv.height-boxH-pad;
+    ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.fillRect(bx,by,boxW,boxH);
 
-  // preview thumbnail (selected frame) at bottom-left
-  if (fr) {
-    const pad = 10;
-    const thW = 220;
-    const thH = 220;
-    const x = pad, y = cv.height - thH - pad;
+    const p=10;
+    const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
+    const s = Math.min((boxW-2*p)/src.w, (boxH-2*p)/src.h);
+    const dx = bx + (boxW - src.w*s)/2;
+    const dy = by + (boxH - src.h*s)/2;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(x, y, thW, thH);
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, src.w*s, src.h*s);
 
-    // fit frame in thumbnail box
-    const s = Math.min((thW-20)/fr.w, (thH-20)/fr.h);
-    const dx = x + (thW - fr.w*s)/2;
-    const dy = y + (thH - fr.h*s)/2;
-
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, fr.x, fr.y, fr.w, fr.h, dx, dy, fr.w*s, fr.h*s);
+    ctx.fillStyle='rgba(230,237,243,.85)';
+    ctx.font='12px system-ui';
+    ctx.fillText(`Frame ${selected} • ${fr.w}×${fr.h}${el.trim.checked?` • Trim ${src.w}×${src.h}`:''}`, bx+p, by+p+12);
   }
 }
 
-function startTimer() {
-  if (timer) clearInterval(timer);
-  const fps = clampInt(fpsEl.value, 1, 60);
-  timer = setInterval(() => {
-    const max = Number(frameIdxEl.max);
-    let v = Number(frameIdxEl.value);
-    v = (v + 1) > max ? 0 : (v + 1);
-    frameIdxEl.value = String(v);
-    idxVal.textContent = frameIdxEl.value;
-    draw();
-  }, Math.floor(1000 / fps));
+function buildFilmstrip(){
+  el.strip.innerHTML='';
+  if(!img || viewFrames.length===0) return;
+
+  // build small thumbnails using offscreen
+  const th=document.createElement('canvas');
+  const tctx=th.getContext('2d');
+  tctx.imageSmoothingEnabled=false;
+
+  for(let i=0;i<viewFrames.length;i++){
+    const fr=viewFrames[i];
+    const div=document.createElement('div');
+    div.className='thumb' + (i===selected?' sel':'');
+
+    const c=document.createElement('canvas');
+    const max=64;
+    const src = el.trim.checked && fr.trim ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h};
+    const s=Math.min(max/src.w, max/src.h);
+    const w=Math.max(1,Math.floor(src.w*s));
+    const h=Math.max(1,Math.floor(src.h*s));
+    c.width=w; c.height=h;
+    const cc=c.getContext('2d');
+    cc.imageSmoothingEnabled=false;
+    cc.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, 0,0,w,h);
+
+    const t=document.createElement('div');
+    t.className='t';
+    t.textContent=String(i);
+
+    div.appendChild(c);
+    div.appendChild(t);
+
+    // select frame
+    div.addEventListener('click', ()=>{
+      selected=i;
+      el.frameIdx.value=String(i);
+      el.idxVal.textContent=String(i);
+      buildFilmstrip();
+      draw();
+    });
+
+    // set pivot by clicking thumbnail image
+    c.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      const rect=c.getBoundingClientRect();
+      const mx=(ev.clientX-rect.left)/rect.width; // 0..1 within thumbnail
+      const my=(ev.clientY-rect.top)/rect.height;
+      // map back to original frame space (respect trim preview if enabled)
+      // if trim enabled, clicking thumbnail corresponds to trimmed region; convert to full frame normalized pivot
+      let px=mx, py=my;
+      if(el.trim.checked && fr.trim){
+        const fx = fr.trim.x + mx*fr.trim.w;
+        const fy = fr.trim.y + my*fr.trim.h;
+        px = fx / fr.w;
+        py = fy / fr.h;
+      }
+      el.px.value = String(clamp(px,0,1).toFixed(2));
+      el.py.value = String(clamp(py,0,1).toFixed(2));
+      draw();
+    });
+
+    el.strip.appendChild(div);
+  }
 }
 
-btnPlay.addEventListener('click', () => {
-  playing = !playing;
-  btnPlay.textContent = playing ? '⏸ Pause' : '▶ Play / Pause';
-  if (playing) startTimer();
-  else { if (timer) clearInterval(timer); timer = null; }
-});
-
-function downloadBlob(blob, filename) {
-  const a = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  a.href = url;
-  a.download = filename;
+function downloadBlob(blob, filename){
+  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);
+  a.href=url; a.download=filename;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
 }
 
-btnJSON.addEventListener('click', () => {
-  if (!img || frames.length === 0) return;
-  const state = (stateEl.value || 'state').trim();
-  const px = Number(pxEl.value);
-  const py = Number(pyEl.value);
+function getActiveFrames(){
+  return viewFrames;
+}
 
-  const data = {
-    state,
-    image: { width: img.width, height: img.height },
-    pivot: {
-      x: Number.isFinite(px) ? px : 0.5,
-      y: Number.isFinite(py) ? py : 1.0
-    },
-    frames: frames.map((fr, i) => ({
-      index: i,
-      x: fr.x, y: fr.y, w: fr.w, h: fr.h,
-      duration_ms: Math.floor(1000 / clampInt(fpsEl.value, 1, 60))
-    }))
+function getDurationMs(){
+  const fps=clamp(floorInt(el.fps.value,8),1,60);
+  return Math.floor(1000/fps);
+}
+
+function makeSimpleJSON(sheetName, packed, packedFrames){
+  const px=Number(el.px.value); const py=Number(el.py.value);
+  const duration=getDurationMs();
+  const frs=getActiveFrames();
+
+  const out={
+    state: (el.state.value||'state').trim(),
+    sheet: sheetName,
+    image: { width: packed.width, height: packed.height },
+    source: { width: img.width, height: img.height },
+    pivot: { x: Number.isFinite(px)?px:0.5, y: Number.isFinite(py)?py:1.0 },
+    frames: []
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  downloadBlob(blob, `${state}.json`);
-});
-
-btnZIP.addEventListener('click', async () => {
-  if (!img || frames.length === 0) return;
-  if (!window.JSZip) {
-    alert('JSZip ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง');
-    return;
+  for(let i=0;i<frs.length;i++){
+    const src=frs[i];
+    const pf=packedFrames[i];
+    const t=el.trim.checked && src.trim ? src.trim : null;
+    out.frames.push({
+      index:i,
+      frame: { x: pf.x, y: pf.y, w: pf.w, h: pf.h },
+      duration_ms: duration,
+      // original location in source image (optional)
+      sourceRect: { x: src.x, y: src.y, w: src.w, h: src.h },
+      ...(t?{ trim: { x:t.x, y:t.y, w:t.w, h:t.h, offX:t.offX, offY:t.offY, srcW:t.srcW, srcH:t.srcH, empty:!!t.empty } }: {})
+    });
   }
-  const state = (stateEl.value || 'state').trim();
-  const zip = new JSZip();
+  return out;
+}
 
-  const off = document.createElement('canvas');
-  const octx = off.getContext('2d');
-  octx.imageSmoothingEnabled = false;
+function makeTexturePackerJSON(sheetName, packed, packedFrames){
+  const state=(el.state.value||'state').trim();
+  const frs=getActiveFrames();
+  const out={
+    frames:{},
+    meta:{
+      app:'Sprite Tool v2',
+      image: sheetName,
+      size:{ w: packed.width, h: packed.height },
+      scale:'1'
+    }
+  };
+  for(let i=0;i<frs.length;i++){
+    const src=frs[i];
+    const pf=packedFrames[i];
+    const key=`${state}_${String(i).padStart(3,'0')}.png`;
+    const t=el.trim.checked && src.trim ? src.trim : null;
+    out.frames[key]={
+      frame:{ x:pf.x, y:pf.y, w:pf.w, h:pf.h },
+      rotated:false,
+      trimmed: !!t,
+      spriteSourceSize: t?{ x:t.offX, y:t.offY, w:t.w, h:t.h }:{ x:0,y:0,w:src.w,h:src.h },
+      sourceSize:{ w:src.w, h:src.h }
+    };
+  }
+  return out;
+}
 
-  for (let i=0; i<frames.length; i++) {
-    const fr = frames[i];
-    off.width = fr.w; off.height = fr.h;
-    octx.clearRect(0,0,fr.w,fr.h);
-    octx.drawImage(img, fr.x, fr.y, fr.w, fr.h, 0, 0, fr.w, fr.h);
+// Packing
+function packGrid(frames, padding){
+  // Simple grid pack: square-ish layout
+  const n=frames.length;
+  if(n===0) return {width:1,height:1, placements:[]};
+  const maxW=Math.max(...frames.map(f=>f.w));
+  const maxH=Math.max(...frames.map(f=>f.h));
+  const cols=Math.ceil(Math.sqrt(n));
+  const rows=Math.ceil(n/cols);
+  const width=cols*maxW + (cols+1)*padding;
+  const height=rows*maxH + (rows+1)*padding;
 
-    const blob = await new Promise(res => off.toBlob(res, 'image/png'));
-    const arr = await blob.arrayBuffer();
+  const placements=[];
+  for(let i=0;i<n;i++){
+    const c=i%cols;
+    const r=Math.floor(i/cols);
+    placements.push({
+      x: padding + c*(maxW+padding),
+      y: padding + r*(maxH+padding),
+      w: frames[i].w,
+      h: frames[i].h
+    });
+  }
+  return {width,height,placements};
+}
+
+function packShelf(frames, padding){
+  // Shelf pack: place frames in rows by height
+  if(frames.length===0) return {width:1,height:1, placements:[]};
+  // heuristic target width
+  const area=frames.reduce((s,f)=>s+(f.w+padding)*(f.h+padding),0);
+  const targetW=Math.ceil(Math.sqrt(area));
+
+  let x=padding, y=padding, shelfH=0, usedW=padding;
+  const placements=[];
+
+  for(const f of frames){
+    if(x + f.w + padding > targetW && x>padding){
+      // new shelf
+      y += shelfH + padding;
+      x = padding;
+      shelfH = 0;
+    }
+    placements.push({x,y,w:f.w,h:f.h});
+    x += f.w + padding;
+    shelfH = Math.max(shelfH, f.h);
+    usedW = Math.max(usedW, x);
+  }
+  const width = usedW + padding;
+  const height = y + shelfH + padding;
+  return {width,height,placements};
+}
+
+function buildPackedSheet(){
+  // Returns {canvas, placements}
+  const state=(el.state.value||'state').trim();
+  const pad=clamp(floorInt(el.pad.value,2),0,999);
+  const active=getActiveFrames();
+
+  // Use trimmed region size if enabled
+  const sources=active.map(fr=>{
+    if(el.trim.checked && fr.trim){
+      return {w: fr.trim.w, h: fr.trim.h, src: fr, trim: fr.trim};
+    }
+    return {w: fr.w, h: fr.h, src: fr, trim: null};
+  });
+
+  let pack;
+  if(el.packMode.value==='none'){
+    // no packing: use original image and map to original rects
+    const placements=active.map(fr=>({x:fr.x,y:fr.y,w:fr.w,h:fr.h}));
+    return {mode:'none', canvas: srcCanvas, width: img.width, height: img.height, placements};
+  }
+
+  const dims=sources.map(s=>({w:s.w,h:s.h}));
+  if(el.packMode.value==='grid') pack=packGrid(dims, pad);
+  else pack=packShelf(dims, pad);
+
+  let W=pack.width, H=pack.height;
+  if(el.pot.value==='yes'){
+    W=nextPow2(W); H=nextPow2(H);
+  }
+
+  const out=document.createElement('canvas');
+  out.width=W; out.height=H;
+  const octx=out.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+  octx.clearRect(0,0,W,H);
+
+  // draw
+  const placements=[];
+  for(let i=0;i<sources.length;i++){
+    const s=sources[i];
+    const p=pack.placements[i];
+    if(!p) continue;
+
+    if(s.trim){
+      octx.drawImage(srcCanvas, s.src.x+s.trim.x, s.src.y+s.trim.y, s.trim.w, s.trim.h, p.x, p.y, s.trim.w, s.trim.h);
+      placements.push({x:p.x,y:p.y,w:s.trim.w,h:s.trim.h});
+    } else {
+      octx.drawImage(srcCanvas, s.src.x, s.src.y, s.src.w, s.src.h, p.x, p.y, s.src.w, s.src.h);
+      placements.push({x:p.x,y:p.y,w:s.src.w,h:s.src.h});
+    }
+  }
+
+  return {mode:el.packMode.value, canvas: out, width: out.width, height: out.height, placements};
+}
+
+async function canvasToPngBlob(c){
+  return await new Promise(res=>c.toBlob(res,'image/png'));
+}
+
+async function exportJSON(){
+  if(!img) return;
+  const state=(el.state.value||'state').trim();
+  const packed=buildPackedSheet();
+  const sheetName = packed.mode==='none' ? '(source image)' : `${state}_sheet.png`;
+
+  const json = (el.jsonFmt.value==='tp')
+    ? makeTexturePackerJSON(sheetName, packed, packed.placements)
+    : makeSimpleJSON(sheetName, packed, packed.placements);
+
+  const blob=new Blob([JSON.stringify(json,null,2)],{type:'application/json'});
+  downloadBlob(blob, `${state}.json`);
+}
+
+async function exportFramesZip(){
+  if(!img) return;
+  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
+
+  const state=(el.state.value||'state').trim();
+  const zip=new JSZip();
+
+  const off=document.createElement('canvas');
+  const octx=off.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+
+  const active=getActiveFrames();
+  for(let i=0;i<active.length;i++){
+    const fr=active[i];
+    const t=el.trim.checked && fr.trim ? fr.trim : null;
+    const sx = fr.x + (t?t.x:0);
+    const sy = fr.y + (t?t.y:0);
+    const sw = (t?t.w:fr.w);
+    const sh = (t?t.h:fr.h);
+
+    off.width=sw; off.height=sh;
+    octx.clearRect(0,0,sw,sh);
+    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+
+    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
+    const arr=await blob.arrayBuffer();
     zip.file(`${state}_${String(i).padStart(3,'0')}.png`, arr);
   }
 
-  // also include JSON
-  const px = Number(pxEl.value);
-  const py = Number(pyEl.value);
-  const meta = {
-    state,
-    image: { width: img.width, height: img.height },
-    pivot: { x: Number.isFinite(px) ? px : 0.5, y: Number.isFinite(py) ? py : 1.0 },
-    frames: frames.map((fr, i) => ({ index:i, x:fr.x, y:fr.y, w:fr.w, h:fr.h }))
-  };
-  zip.file(`${state}.json`, JSON.stringify(meta, null, 2));
-
-  const out = await zip.generateAsync({type:'blob'});
+  const out=await zip.generateAsync({type:'blob'});
   downloadBlob(out, `${state}_frames.zip`);
+}
+
+async function exportPackedSheet(){
+  if(!img) return;
+  const state=(el.state.value||'state').trim();
+  const packed=buildPackedSheet();
+  if(packed.mode==='none'){
+    // export source as convenience
+    const blob=await canvasToPngBlob(srcCanvas);
+    downloadBlob(blob, `${state}_source.png`);
+    return;
+  }
+  const blob=await canvasToPngBlob(packed.canvas);
+  downloadBlob(blob, `${state}_sheet.png`);
+}
+
+async function exportAllZip(){
+  if(!img) return;
+  if(!window.JSZip){ alert('JSZip ยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง'); return; }
+
+  const state=(el.state.value||'state').trim();
+  const zip=new JSZip();
+
+  // JSON
+  const packed=buildPackedSheet();
+  const sheetName = packed.mode==='none' ? '(source image)' : `${state}_sheet.png`;
+  const json = (el.jsonFmt.value==='tp')
+    ? makeTexturePackerJSON(sheetName, packed, packed.placements)
+    : makeSimpleJSON(sheetName, packed, packed.placements);
+  zip.file(`${state}.json`, JSON.stringify(json,null,2));
+
+  // frames
+  const off=document.createElement('canvas');
+  const octx=off.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+  const active=getActiveFrames();
+  for(let i=0;i<active.length;i++){
+    const fr=active[i];
+    const t=el.trim.checked && fr.trim ? fr.trim : null;
+    const sx = fr.x + (t?t.x:0);
+    const sy = fr.y + (t?t.y:0);
+    const sw = (t?t.w:fr.w);
+    const sh = (t?t.h:fr.h);
+
+    off.width=sw; off.height=sh;
+    octx.clearRect(0,0,sw,sh);
+    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+
+    const blob=await new Promise(res=>off.toBlob(res,'image/png'));
+    const arr=await blob.arrayBuffer();
+    zip.file(`frames/${state}_${String(i).padStart(3,'0')}.png`, arr);
+  }
+
+  // sheet
+  const sheetCanvas = (packed.mode==='none') ? srcCanvas : packed.canvas;
+  const sheetBlob = await canvasToPngBlob(sheetCanvas);
+  zip.file((packed.mode==='none')?`${state}_source.png`:`${state}_sheet.png`, await sheetBlob.arrayBuffer());
+
+  const out=await zip.generateAsync({type:'blob'});
+  downloadBlob(out, `${state}_bundle.zip`);
+}
+
+// --- Playback ---
+function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
+function startTimer(){
+  stopTimer();
+  const fps=clamp(floorInt(el.fps.value,8),1,60);
+  const ms=Math.floor(1000/fps);
+  const max=Math.max(0, getActiveFrames().length-1);
+
+  let dir = (el.dirMode.value==='reverse') ? -1 : 1;
+  pingDir = dir;
+
+  timer=setInterval(()=>{
+    if(max<=0){ draw(); return; }
+
+    if(el.loopMode.value==='pingpong'){
+      selected += pingDir;
+      if(selected>=max){ selected=max; pingDir=-1; }
+      if(selected<=0){ selected=0; pingDir=1; }
+    } else {
+      selected += dir;
+      if(selected>max){
+        if(el.loopMode.value==='once'){ selected=max; playing=false; stopTimer(); }
+        else selected=0;
+      }
+      if(selected<0){
+        if(el.loopMode.value==='once'){ selected=0; playing=false; stopTimer(); }
+        else selected=max;
+      }
+    }
+
+    el.frameIdx.value=String(selected);
+    el.idxVal.textContent=String(selected);
+    buildFilmstrip();
+    draw();
+  }, ms);
+}
+
+function togglePlay(){
+  if(!img) return;
+  playing=!playing;
+  el.btnPlay.textContent = playing ? '⏸ Pause' : '▶ Play / Pause';
+  if(playing) startTimer(); else stopTimer();
+}
+
+function resetAll(){
+  playing=false; stopTimer();
+  selected=0;
+  el.frameIdx.value='0'; el.idxVal.textContent='0';
+  el.fps.value='8'; el.fpsVal.textContent='8';
+  el.mode.value='colsrows'; setModeUI();
+  el.cols.value='4'; el.rows.value='1';
+  el.fw.value='64'; el.fh.value='64';
+  el.margin.value='0'; el.spacing.value='0';
+  el.px.value='0.5'; el.py.value='1.0';
+  el.trim.checked=false;
+  el.colorkey.checked=false;
+  el.keyColor.value='#000000';
+  el.keyTol.value='20';
+  el.packMode.value='none';
+  el.pad.value='2';
+  el.pot.value='no';
+  el.jsonFmt.value='simple';
+  el.loopMode.value='loop';
+  el.dirMode.value='forward';
+  el.rangeMode.value='all';
+  setRangeUI();
+  recompute();
+}
+
+// --- Picking color from canvas ---
+function pickColorAtCanvas(x,y){
+  // Convert canvas click to source image coordinate
+  if(!img) return;
+  const z=Number(el.zoom.value);
+  const iw=img.width*z, ih=img.height*z;
+  const ox=(el.cv.width-iw)/2;
+  const oy=(el.cv.height-ih)/2;
+  const sx = Math.floor((x-ox)/z);
+  const sy = Math.floor((y-oy)/z);
+  if(sx<0||sy<0||sx>=img.width||sy>=img.height) return;
+  const p=srcCtx.getImageData(sx,sy,1,1).data;
+  const hex = '#'+[p[0],p[1],p[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  el.keyColor.value = hex;
+}
+
+// --- Wire events ---
+el.mode.addEventListener('change', setModeUI);
+el.rangeMode.addEventListener('change', setRangeUI);
+
+for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt,el.px,el.py]){
+  e.addEventListener('input', recompute);
+  e.addEventListener('change', recompute);
+}
+
+el.fps.addEventListener('input', ()=>{
+  el.fpsVal.textContent = el.fps.value;
+  if(playing) startTimer();
 });
 
-// init
+el.frameIdx.addEventListener('input', ()=>{
+  selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0,getActiveFrames().length-1));
+  el.idxVal.textContent=String(selected);
+  buildFilmstrip();
+  draw();
+});
+
+el.loopMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
+el.dirMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
+
+el.btnPlay.addEventListener('click', togglePlay);
+el.btnReset.addEventListener('click', resetAll);
+
+el.btnPivotBottom.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='1.00'; draw(); });
+el.btnPivotCenter.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='0.50'; draw(); });
+
+// redraw when user edits pivot manually
+el.px.addEventListener('input', draw);
+el.py.addEventListener('input', draw);
+
+el.btnJSON.addEventListener('click', exportJSON);
+el.btnZIP.addEventListener('click', exportFramesZip);
+el.btnSheet.addEventListener('click', exportPackedSheet);
+el.btnAll.addEventListener('click', exportAllZip);
+
+el.zoom.addEventListener('input', draw);
+el.bg.addEventListener('change', draw);
+el.showGrid.addEventListener('change', draw);
+el.showPivot.addEventListener('change', draw);
+
+el.file.addEventListener('change', async ()=>{
+  const f=el.file.files?.[0];
+  if(!f) return;
+  img=await loadImage(f);
+  enableUI(true);
+  el.btnPlay.textContent='▶ Play / Pause';
+  playing=false; stopTimer();
+  selected=0;
+  el.frameIdx.value='0'; el.idxVal.textContent='0';
+  recompute();
+});
+
+el.cv.addEventListener('click', (ev)=>{
+  const rect=el.cv.getBoundingClientRect();
+  const x=(ev.clientX-rect.left) * (el.cv.width/rect.width);
+  const y=(ev.clientY-rect.top) * (el.cv.height/rect.height);
+  if(el.pickMode.checked){
+    pickColorAtCanvas(x,y);
+    // auto enable colorkey to make it obvious
+    el.colorkey.checked=true;
+    recompute();
+  }
+});
+
+// Keyboard
+window.addEventListener('keydown', (e)=>{
+  if(e.code==='Space'){
+    e.preventDefault();
+    if(!el.btnPlay.disabled) togglePlay();
+  }
+  if(e.code==='ArrowRight'){
+    if(!img) return;
+    const max=Math.max(0,getActiveFrames().length-1);
+    selected=clamp(selected+1,0,max);
+    el.frameIdx.value=String(selected);
+    el.idxVal.textContent=String(selected);
+    buildFilmstrip();
+    draw();
+  }
+  if(e.code==='ArrowLeft'){
+    if(!img) return;
+    const max=Math.max(0,getActiveFrames().length-1);
+    selected=clamp(selected-1,0,max);
+    el.frameIdx.value=String(selected);
+    el.idxVal.textContent=String(selected);
+    buildFilmstrip();
+    draw();
+  }
+});
+
+// Init
+enableUI(false);
 setModeUI();
-fpsVal.textContent = fpsEl.value;
+setRangeUI();
+el.fpsVal.textContent=el.fps.value;
+
 </script>
 </body>
 </html>
