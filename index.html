@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sprite Tool v2.2 — Cut • Align • Preview • Trim • Pack • Export</title>
+  <title>Sprite Tool V5 — Cut • Align • Preview • Trim • Pack • Export</title>
   <style>
     :root{
       --bg:#0b0f14; --panel:#111824; --panel2:#0b1220; --bd:#233044;
@@ -28,19 +28,16 @@
       border:1px solid var(--bd); border-radius:999px;
       background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)
     }
+    .pill.warn{border-color:rgba(255,204,102,.55); color:rgba(255,204,102,.95)}
 
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap:12px;
-      padding:12px 16px;
+      padding:12px 16px 16px;
       align-items:stretch;
     }
-    @media (max-width: 1100px){
-      .grid{grid-template-columns:1fr;}
-    }
-
-    .settingsWrap{padding: 0 16px 16px;}
+    @media (max-width: 1100px){ .grid{grid-template-columns:1fr;} }
 
     .card{background:var(--panel); border:1px solid var(--bd); border-radius:var(--r);
       padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,.25)
@@ -104,16 +101,15 @@
     .thumb canvas{width:100%; height:auto; border:0; border-radius:10px; background:transparent}
     .thumb .t{font-size:11px; color:var(--muted); text-align:center}
 
-    .kbd{font-size:11px; padding:2px 6px; border:1px solid var(--bd); border-radius:8px;
-      background:rgba(11,18,32,.6); color:var(--muted)
-    }
-
     details{border:1px solid var(--bd); border-radius:14px; background:rgba(11,18,32,.35); padding:10px;}
     details + details{margin-top:10px;}
     summary{cursor:pointer; list-style:none; font-weight:700; color:var(--text);}
     summary::-webkit-details-marker{display:none;}
     summary .small{font-weight:600; color:var(--muted); font-size:12px; margin-left:8px;}
 
+    .kbd{font-size:11px; padding:2px 6px; border:1px solid var(--bd); border-radius:8px;
+      background:rgba(11,18,32,.6); color:var(--muted)
+    }
     .warn{color:var(--warn)}
   </style>
 </head>
@@ -121,18 +117,18 @@
 <header>
   <div class="top">
     <div>
-      <h1>Sprite Tool v2.2 — Cut • Align • Preview • Trim • Pack • Export</h1>
-      <div class="sub">Layout แบบ 4 กล่องตามที่ขอ • กล่องบน 3 ใบ + กล่องตั้งค่าด้านล่าง • ลากบนภาพเพื่อเลื่อนกริด</div>
+      <h1>Sprite Tool V5 — Cut • Align • Preview • Trim • Pack • Export</h1>
+      <div class="sub">รวม setting เข้าแต่ละกล่อง • กรอบสีน้ำเงิน (Selected) ไม่หาย แม้เลื่อนออกนอกภาพ</div>
     </div>
     <div class="pill"><span id="imgInfo">No image</span> • <span id="frameInfo">0 frames</span></div>
   </div>
 </header>
 
-<!-- TOP: 3 boxes -->
 <div class="grid">
-  <!-- Box 1: Animation -->
+  <!-- Panel 1: Animation + controls -->
   <div class="card">
     <h2>1) Animation (ผลลัพธ์)</h2>
+
     <div class="toolbar">
       <div class="group">
         <button id="btnPlay" class="secondary" disabled>▶ Play / Pause</button>
@@ -182,13 +178,25 @@
     </div>
   </div>
 
-  <!-- Box 2: Uploaded image preview + zoom -->
+  <!-- Panel 2: Image + cut/grid + zoom -->
   <div class="card">
-    <h2>2) Image Preview (ภาพที่อัปโหลด)</h2>
-    <div class="toolbar">
+    <h2>2) Image + Cut/Grid</h2>
+
+    <div class="row">
+      <div>
+        <label>ใส่รูป (PNG แนะนำ)</label>
+        <input id="file" type="file" accept="image/*" />
+      </div>
+      <div>
+        <label>File name (สำหรับ export)</label>
+        <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" />
+      </div>
+    </div>
+
+    <div class="toolbar" style="margin-top:6px;">
       <div class="group">
-        <label class="toggle"><input id="showGrid" type="checkbox" checked/> Show grid</label>
-        <label class="toggle"><input id="showPivot" type="checkbox" checked/> Show pivot</label>
+        <label class="toggle"><input id="showGrid" type="checkbox" checked/> Grid</label>
+        <label class="toggle"><input id="showPivot" type="checkbox" checked/> Pivot</label>
         <label class="toggle"><input id="pickMode" type="checkbox"/> Pick color</label>
       </div>
       <div class="group">
@@ -207,54 +215,10 @@
       <div class="cornerTag" id="imgCorner">No image</div>
     </div>
 
-    <div class="hint" style="margin-top:10px;">
-      <span class="warn">ลากบนภาพ</span> เพื่อเลื่อนกรอบเฟรม (grid offset) • ถ้าเปิด <b>Pick color</b> จะใช้คลิกดูดสีแทน
-    </div>
-  </div>
+    <div id="warnBox" class="pill warn" style="margin-top:10px; display:none;">⚠ กรอบถูกเลื่อนออกนอกภาพ (ยังแสดงอยู่) — ปรับ Offset หรือ Zoom เพื่อเห็น</div>
 
-  <!-- Box 3: Frame picker/selection -->
-  <div class="card">
-    <h2>3) Frame Picker (เลือก/จัดตำแหน่งเฟรม)</h2>
-
-    <div class="row">
-      <div>
-        <label>Selected frame preview</label>
-        <canvas id="prev" width="240" height="240"></canvas>
-      </div>
-      <div class="hint" style="padding-top:28px;">
-        <div class="pill">Selected frame</div>
-        <div id="prevInfo" style="margin-top:8px;">-</div>
-        <div style="opacity:.85; margin-top:8px;">คลิกใน thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก</div>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-
-    <div class="hint" style="margin-bottom:8px;">Filmstrip</div>
-    <div id="strip" class="filmstrip"></div>
-  </div>
-</div>
-
-<!-- Box 4: Settings (full width) -->
-<div class="settingsWrap">
-  <div class="card">
-    <h2>4) Settings</h2>
-
-    <div class="row">
-      <div>
-        <label>ใส่รูป (PNG แนะนำ)</label>
-        <input id="file" type="file" accept="image/*" />
-      </div>
-      <div>
-        <label>File name (สำหรับ export)</label>
-        <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" />
-      </div>
-    </div>
-
-    <div class="hr"></div>
-
-    <details open>
-      <summary>Cut / Grid <span class="small">กำหนดจำนวนเฟรม + คอลัมน์/แถว + ขนาดเฟรม</span></summary>
+    <details open style="margin-top:10px;">
+      <summary>Cut / Grid <span class="small">อยู่กล่องเดียวกับภาพเพื่อปรับง่าย</span></summary>
 
       <div class="row" style="margin-top:10px;">
         <div>
@@ -325,7 +289,9 @@
             <option value="custom">Custom</option>
           </select>
         </div>
-        <div class="hint" style="padding-top:28px;">Tip: ถ้า grid ไม่ตรงรูป ให้ปรับ Offset หรือ <b>ลากบนภาพ</b> (กล่อง 2)</div>
+        <div class="hint" style="padding-top:28px;">
+          <span class="warn">ลากบนภาพ</span> เพื่อเลื่อนกรอบ (Offset) • กรอบ Selected จะไม่ถูกลบแล้ว
+        </div>
       </div>
 
       <div id="rangeBox" class="row" style="display:none;">
@@ -343,8 +309,27 @@
         <b>Total (หลัง apply range):</b> <span id="totalHint">0</span>
       </div>
     </details>
+  </div>
 
-    <details>
+  <!-- Panel 3: Frame picker + pivot/trim/export -->
+  <div class="card">
+    <h2>3) Frames + Pivot + Export</h2>
+
+    <div class="row">
+      <div>
+        <label>Selected frame preview</label>
+        <canvas id="prev" width="240" height="240"></canvas>
+      </div>
+      <div class="hint" style="padding-top:28px;">
+        <div class="pill">Selected frame</div>
+        <div id="prevInfo" style="margin-top:8px;">-</div>
+        <div style="opacity:.85; margin-top:8px;">คลิก thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก</div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <details open>
       <summary>Pivot / Trim / Color Key</summary>
       <div class="row" style="margin-top:10px;">
         <div>
@@ -369,7 +354,7 @@
 
       <label class="toggle">
         <input id="colorkey" type="checkbox" />
-        <span><b>Color key</b> ลบสีพื้นหลัง (ใช้ Pick color ในกล่อง 2)</span>
+        <span><b>Color key</b> ลบสีพื้นหลัง (ใช้ Pick color ที่กล่อง 2)</span>
       </label>
 
       <div class="row" style="align-items:center;">
@@ -386,7 +371,6 @@
 
     <details>
       <summary>Pack / Export</summary>
-
       <div class="row" style="margin-top:10px;">
         <div>
           <label>Pack sprite sheet</label>
@@ -433,6 +417,10 @@
       </div>
     </details>
 
+    <div class="hr"></div>
+
+    <div class="hint" style="margin-bottom:8px;">Filmstrip</div>
+    <div id="strip" class="filmstrip"></div>
   </div>
 </div>
 
@@ -446,16 +434,14 @@ const hexToRgb=(hex)=>{const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i); i
 
 // ===== Elements =====
 const el={
-  // top boxes
   anim: $('anim'), animInfo: $('animInfo'),
   cv: $('cv'), imgCorner: $('imgCorner'),
   prev: $('prev'), prevInfo: $('prevInfo'), strip: $('strip'),
 
-  // header info
   imgInfo: $('imgInfo'), frameInfo: $('frameInfo'), totalHint: $('totalHint'),
 
-  // controls
   file: $('file'), state: $('state'),
+
   mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
   margin: $('margin'), spacing: $('spacing'), offx: $('offx'), offy: $('offy'), order: $('order'),
   rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'), rangeBox: $('rangeBox'),
@@ -473,12 +459,13 @@ const el={
 
   btnPlay: $('btnPlay'), btnReset: $('btnReset'),
   btnJSON: $('btnJSON'), btnZIP: $('btnZIP'), btnSheet: $('btnSheet'), btnAll: $('btnAll'),
+
+  warnBox: $('warnBox'),
 };
 
 const ctx=el.cv.getContext('2d');
 const actx=el.anim.getContext('2d');
 const pctx=el.prev.getContext('2d');
-
 ctx.imageSmoothingEnabled=false;
 actx.imageSmoothingEnabled=false;
 pctx.imageSmoothingEnabled=false;
@@ -494,12 +481,6 @@ let jszipReady=false;
   document.head.appendChild(s);
 })();
 
-function syncZipButtons(){
-  if(!img){ el.btnZIP.disabled=true; el.btnAll.disabled=true; return; }
-  el.btnZIP.disabled=!jszipReady;
-  el.btnAll.disabled=!jszipReady;
-}
-
 // ===== State =====
 let img=null;
 let srcCanvas=null, srcCtx=null;
@@ -510,7 +491,12 @@ let playing=false;
 let timer=null;
 let pingDir=1;
 
-// ===== Core utilities =====
+function syncZipButtons(){
+  if(!img){ el.btnZIP.disabled=true; el.btnAll.disabled=true; return; }
+  el.btnZIP.disabled=!jszipReady;
+  el.btnAll.disabled=!jszipReady;
+}
+
 function enableUI(on){
   el.btnPlay.disabled=!on;
   el.btnReset.disabled=!on;
@@ -571,8 +557,36 @@ function bgPaint(g, W, H){
   else { g.fillStyle='#0b1220'; g.fillRect(0,0,W,H); }
 }
 
+function updateDerivedFields(){
+  if(!img) return;
+  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
+
+  if(el.mode.value==='framesize'){
+    const offx=clamp(floorInt(el.offx.value,0),-999999,999999);
+    const offy=clamp(floorInt(el.offy.value,0),-999999,999999);
+    const startX=margin+offx;
+    const startY=margin+offy;
+    const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
+    const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
+    const availW = img.width - startX - margin;
+    const availH = img.height - startY - margin;
+    // IMPORTANT: keep at least 1×1 so frames never becomes empty
+    const cols=Math.max(1, Math.floor((availW+spacing)/(fw+spacing)));
+    const rows=Math.max(1, Math.floor((availH+spacing)/(fh+spacing)));
+    el.cols.value=String(cols);
+    el.rows.value=String(rows);
+  } else {
+    const cols=clamp(floorInt(el.cols.value,1),1,99999);
+    const rows=clamp(floorInt(el.rows.value,1),1,99999);
+    const fw=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
+    const fh=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
+    if(fw>0) el.fw.value=String(fw);
+    if(fh>0) el.fh.value=String(fh);
+  }
+}
+
 function computeTrimForFrame(fr){
-  // If frame goes out of bounds, clamp before getImageData to avoid exception
   const sx=clamp(fr.x,0,img.width-1);
   const sy=clamp(fr.y,0,img.height-1);
   const sw=clamp(fr.w,1,img.width-sx);
@@ -596,11 +610,23 @@ function computeTrimForFrame(fr){
   return {x:minX,y:minY,w,h,offX:minX,offY:minY,srcW:fr.w,srcH:fr.h,empty:false};
 }
 
+function fallbackFrame(){
+  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
+  const offx=clamp(floorInt(el.offx.value,0),-999999,999999);
+  const offy=clamp(floorInt(el.offy.value,0),-999999,999999);
+  const startX=margin+offx;
+  const startY=margin+offy;
+  const w=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
+  const h=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
+  return {x:startX, y:startY, w, h};
+}
+
 function computeGridFrames(){
   const margin=clamp(floorInt(el.margin.value,0),0,99999);
   const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
-  const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
-  const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
+  const offx=clamp(floorInt(el.offx.value,0),-999999,999999);
+  const offy=clamp(floorInt(el.offy.value,0),-999999,999999);
   const startX=margin+offx;
   const startY=margin+offy;
 
@@ -609,14 +635,15 @@ function computeGridFrames(){
   if(el.mode.value==='colsrows'){
     const cols=clamp(floorInt(el.cols.value,1),1,99999);
     const rows=clamp(floorInt(el.rows.value,1),1,99999);
-    const w=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
-    const h=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
-    if(w<=0||h<=0) return [];
+
+    // IMPORTANT: keep at least 1px so selection never disappears
+    const w=Math.max(1, Math.floor((img.width-2*margin-(cols-1)*spacing)/cols));
+    const h=Math.max(1, Math.floor((img.height-2*margin-(rows-1)*spacing)/rows));
 
     const push=(r,c)=>out.push({x:startX+c*(w+spacing), y:startY+r*(h+spacing), w, h});
     if(el.order.value==='row'){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) push(r,c);
-    }else{
+    } else {
       for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) push(r,c);
     }
     return out;
@@ -625,23 +652,16 @@ function computeGridFrames(){
   // framesize
   const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
   const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
-  const availW = img.width - startX - margin;
-  const availH = img.height - startY - margin;
-  const cols=Math.floor((availW+spacing)/(fw+spacing));
-  const rows=Math.floor((availH+spacing)/(fh+spacing));
-  if(cols<=0||rows<=0) return [];
+
+  // IMPORTANT: do NOT drop frames when outside image; we still draw blue selection.
+  const cols=Math.max(1, clamp(floorInt(el.cols.value,1),1,99999));
+  const rows=Math.max(1, clamp(floorInt(el.rows.value,1),1,99999));
 
   const gen=(r,c)=>({x:startX+c*(fw+spacing), y:startY+r*(fh+spacing), w:fw, h:fh});
   if(el.order.value==='row'){
-    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-      const fr=gen(r,c);
-      if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
-    }
-  }else{
-    for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
-      const fr=gen(r,c);
-      if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
-    }
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) out.push(gen(r,c));
+  } else {
+    for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) out.push(gen(r,c));
   }
   return out;
 }
@@ -654,42 +674,11 @@ function applyRange(list){
   return list.slice(a,b+1);
 }
 
-function updateDerivedFields(){
-  // Keep cols/rows in sync when using framesize, and keep frame size in sync when using colsrows
-  if(!img) return;
-
-  const margin=clamp(floorInt(el.margin.value,0),0,99999);
-  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
-
-  if(el.mode.value==='framesize'){
-    const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
-    const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
-    const startX=margin+offx;
-    const startY=margin+offy;
-    const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
-    const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
-    const availW = img.width - startX - margin;
-    const availH = img.height - startY - margin;
-    const cols=Math.max(1, Math.floor((availW+spacing)/(fw+spacing)));
-    const rows=Math.max(1, Math.floor((availH+spacing)/(fh+spacing)));
-    el.cols.value=String(cols);
-    el.rows.value=String(rows);
-  } else {
-    const cols=clamp(floorInt(el.cols.value,1),1,99999);
-    const rows=clamp(floorInt(el.rows.value,1),1,99999);
-    const fw=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
-    const fh=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
-    if(fw>0) el.fw.value=String(fw);
-    if(fh>0) el.fh.value=String(fh);
-  }
-}
-
 function getFilePrefix(){
   const raw=(el.state.value||'').trim();
   return raw.length?raw:'sprite';
 }
 
-// ===== Rendering =====
 function drawImageCanvas(){
   const W=el.cv.width, H=el.cv.height;
   bgPaint(ctx, W, H);
@@ -699,6 +688,7 @@ function drawImageCanvas(){
     ctx.font='16px system-ui';
     ctx.fillText('อัปโหลดรูปเพื่อเริ่ม', 20, 40);
     el.imgCorner.textContent='No image';
+    el.warnBox.style.display='none';
     return;
   }
 
@@ -721,28 +711,33 @@ function drawImageCanvas(){
     }
   }
 
-  // Selected
-  const fr=viewFrames[selected];
-  if(fr){
-    ctx.strokeStyle='rgba(31,111,235,.95)';
-    ctx.lineWidth=2;
-    ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
+  // Selected (always draw; if viewFrames missing use fallback)
+  const fr=viewFrames[selected] || fallbackFrame();
 
-    if(el.trim.checked && fr.trim && !fr.trim.empty){
-      ctx.strokeStyle='rgba(255,255,255,.65)';
-      ctx.lineWidth=1.5;
-      ctx.strokeRect(ox+(fr.x+fr.trim.x)*z, oy+(fr.y+fr.trim.y)*z, fr.trim.w*z, fr.trim.h*z);
-    }
+  // warn if selected is fully outside view
+  const sx=ox+fr.x*z, sy=oy+fr.y*z, sw=fr.w*z, sh=fr.h*z;
+  const fullyOutside = (sx+sw<0) || (sy+sh<0) || (sx>W) || (sy>H);
+  el.warnBox.style.display = fullyOutside ? 'inline-flex' : 'none';
 
-    if(el.showPivot.checked){
-      const px=Number(el.px.value), py=Number(el.py.value);
-      const pivotX=fr.x + fr.w*(Number.isFinite(px)?px:0.5);
-      const pivotY=fr.y + fr.h*(Number.isFinite(py)?py:1.0);
-      ctx.fillStyle='rgba(255,80,80,.95)';
-      ctx.beginPath();
-      ctx.arc(ox+pivotX*z, oy+pivotY*z, 5, 0, Math.PI*2);
-      ctx.fill();
-    }
+  ctx.strokeStyle='rgba(31,111,235,.95)';
+  ctx.lineWidth=2;
+  ctx.strokeRect(sx, sy, sw, sh);
+
+  if(el.trim.checked && viewFrames[selected] && viewFrames[selected].trim && !viewFrames[selected].trim.empty){
+    const t=viewFrames[selected].trim;
+    ctx.strokeStyle='rgba(255,255,255,.65)';
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(ox+(viewFrames[selected].x+t.x)*z, oy+(viewFrames[selected].y+t.y)*z, t.w*z, t.h*z);
+  }
+
+  if(el.showPivot.checked){
+    const px=Number(el.px.value), py=Number(el.py.value);
+    const pivotX=fr.x + fr.w*(Number.isFinite(px)?px:0.5);
+    const pivotY=fr.y + fr.h*(Number.isFinite(py)?py:1.0);
+    ctx.fillStyle='rgba(255,80,80,.95)';
+    ctx.beginPath();
+    ctx.arc(ox+pivotX*z, oy+pivotY*z, 5, 0, Math.PI*2);
+    ctx.fill();
   }
 
   el.imgCorner.textContent=`${img.width}×${img.height}px`;
@@ -816,7 +811,13 @@ function buildFilmstrip(){
     c.height=Math.max(1,Math.floor(src.h*s));
     const cc=c.getContext('2d');
     cc.imageSmoothingEnabled=false;
-    cc.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, 0,0,c.width,c.height);
+
+    // clamp for safety
+    const sx=clamp(fr.x+src.x,0,img.width-1);
+    const sy=clamp(fr.y+src.y,0,img.height-1);
+    const sw=clamp(src.w,1,img.width-sx);
+    const sh=clamp(src.h,1,img.height-sy);
+    cc.drawImage(srcCanvas, sx, sy, sw, sh, 0,0,c.width,c.height);
 
     const t=document.createElement('div');
     t.className='t';
@@ -834,7 +835,6 @@ function buildFilmstrip(){
     });
 
     c.addEventListener('click', (ev)=>{
-      // set pivot based on click point
       ev.stopPropagation();
       const rect=c.getBoundingClientRect();
       const mx=(ev.clientX-rect.left)/rect.width;
@@ -855,7 +855,6 @@ function buildFilmstrip(){
   }
 }
 
-// ===== Recompute / Playback =====
 function recompute(){
   if(!img){ drawAll(); return; }
 
@@ -865,6 +864,11 @@ function recompute(){
   updateDerivedFields();
 
   frames=computeGridFrames();
+  if(frames.length===0){
+    // absolute fallback - never allow empty
+    frames=[fallbackFrame()];
+  }
+
   if(el.trim.checked){
     for(const fr of frames) fr.trim=computeTrimForFrame(fr);
   }else{
@@ -872,6 +876,9 @@ function recompute(){
   }
 
   viewFrames=applyRange(frames);
+  if(viewFrames.length===0){
+    viewFrames=[fallbackFrame()];
+  }
 
   el.frameIdx.max=String(Math.max(0, viewFrames.length-1));
   selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0, viewFrames.length-1));
@@ -937,15 +944,12 @@ function resetAll(){
   el.pickMode.checked=false;
   el.bg.value='checker';
   el.zoom.value='1'; el.zoomVal.textContent='1.00x';
-
-  // Keep current cut settings, but reset offsets
   el.offx.value='0';
   el.offy.value='0';
-
   recompute();
 }
 
-// ===== Color picker / drag offset on image canvas =====
+// ===== Interaction: drag offset / pick color =====
 function canvasClientToCanvas(ev, canvas){
   const rect=canvas.getBoundingClientRect();
   const x=(ev.clientX-rect.left) * (canvas.width/rect.width);
@@ -1006,7 +1010,7 @@ el.cv.addEventListener('click', (ev)=>{
   recompute();
 });
 
-// ===== Export (same features) =====
+// ===== Export =====
 function downloadBlob(blob, filename){
   const a=document.createElement('a');
   const url=URL.createObjectURL(blob);
@@ -1085,13 +1089,18 @@ function buildPackedSheet(){
     const fr=active[i];
     const p=pack.placements[i];
     if(!p) continue;
-    if(el.trim.checked && fr.trim){
-      octx.drawImage(srcCanvas, fr.x+fr.trim.x, fr.y+fr.trim.y, fr.trim.w, fr.trim.h, p.x, p.y, fr.trim.w, fr.trim.h);
-      placements.push({x:p.x,y:p.y,w:fr.trim.w,h:fr.trim.h});
-    }else{
-      octx.drawImage(srcCanvas, fr.x, fr.y, fr.w, fr.h, p.x, p.y, fr.w, fr.h);
-      placements.push({x:p.x,y:p.y,w:fr.w,h:fr.h});
-    }
+    // clamp source for safety when frames are outside image
+    const t=(el.trim.checked && fr.trim) ? fr.trim : null;
+    const sx=fr.x+(t?t.x:0);
+    const sy=fr.y+(t?t.y:0);
+    const sw=(t?t.w:fr.w);
+    const sh=(t?t.h:fr.h);
+    const csx=clamp(sx,0,img.width-1);
+    const csy=clamp(sy,0,img.height-1);
+    const csw=clamp(sw,1,img.width-csx);
+    const csh=clamp(sh,1,img.height-csy);
+    octx.drawImage(srcCanvas, csx,csy,csw,csh, p.x, p.y, csw, csh);
+    placements.push({x:p.x,y:p.y,w:csw,h:csh});
   }
 
   return {mode:el.packMode.value, canvas:out, width:W, height:H, placements};
@@ -1128,7 +1137,7 @@ function makeTexturePackerJSON(sheetName, packed, packedFrames){
   const prefix=getFilePrefix();
   const out={
     frames:{},
-    meta:{app:'Sprite Tool v2.2', image:sheetName, size:{w:packed.width,h:packed.height}, scale:'1'}
+    meta:{app:'Sprite Tool V5', image:sheetName, size:{w:packed.width,h:packed.height}, scale:'1'}
   };
   for(let i=0;i<viewFrames.length;i++){
     const src=viewFrames[i];
@@ -1229,15 +1238,27 @@ async function exportAllZip(){
 
 // ===== UI events =====
 function setRangeUI(){
-  el.rangeBox.style.display=(el.rangeMode.value==='custom')?'grid':'none';
+  const isCustom = (el.rangeMode.value==='custom');
+  el.rangeBox.style.display = isCustom ? 'grid' : 'none';
+
+  // UX fix: when switching to Custom, default to full range
+  if(img && frames && frames.length){
+    const max = Math.max(0, frames.length - 1);
+    el.rangeStart.max = String(max);
+    el.rangeEnd.max = String(max);
+
+    if(isCustom){
+      const s = clamp(floorInt(el.rangeStart.value, 0), 0, max);
+      const e = clamp(floorInt(el.rangeEnd.value, max), 0, max);
+      el.rangeStart.value = String(s);
+      el.rangeEnd.value = String(Math.max(s, e));
+    }
+  }
+
   recompute();
 }
 
-function setModeUI(){
-  recompute();
-}
-
-el.mode.addEventListener('change', setModeUI);
+el.mode.addEventListener('change', recompute);
 el.rangeMode.addEventListener('change', setRangeUI);
 
 for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.offx,el.offy,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt]){
