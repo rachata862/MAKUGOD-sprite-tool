@@ -139,6 +139,18 @@
 
     <div class="row">
       <div>
+        <label>Frame Offset X (px)</label>
+        <input id="offx" type="number" value="0" />
+      </div>
+      <div>
+        <label>Frame Offset Y (px)</label>
+        <input id="offy" type="number" value="0" />
+      </div>
+    </div>
+    <div class="hint">ใช้เพื่อเลื่อนกรอบเฟรม (grid) ให้ตรงกับรูปที่ไม่อยู่กึ่งกลาง • คุณสามารถลากกรอบด้วยเมาส์บนจอ Canvas ได้</div>
+
+    <div class="row">
+      <div>
         <label>Order</label>
         <select id="order">
           <option value="row">Row-major (ซ้าย→ขวา แล้วลงบรรทัด)</option>
@@ -335,11 +347,31 @@
 
 <script>
 // JSZip CDN (ถ้าองค์กรบล็อก CDN → ZIP export จะไม่ทำงาน)
+let jszipReady = false;
 (function(){
   const s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+  s.async = true;
+  s.onload = ()=>{ jszipReady = true; syncZipButtons(); };
+  s.onerror = ()=>{
+    jszipReady = false;
+    console.warn('JSZip failed to load (CDN blocked or offline). ZIP export disabled.');
+    syncZipButtons();
+  };
   document.head.appendChild(s);
 })();
+
+function syncZipButtons(){
+  // ZIP requires JSZip. Other exports do not.
+  if(!img){
+    el.btnZIP.disabled = true;
+    el.btnAll.disabled = true;
+    return;
+  }
+  el.btnZIP.disabled = !jszipReady;
+  el.btnAll.disabled = !jszipReady;
+}
+
 
 const $=(id)=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -349,7 +381,7 @@ const hexToRgb=(hex)=>{const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i); i
 
 const el={
   file: $('file'), mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
-  margin: $('margin'), spacing: $('spacing'), order: $('order'),
+  margin: $('margin'), spacing: $('spacing'), offx: $('offx'), offy: $('offy'), order: $('order'),
   rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'), rangeBox: $('rangeBox'),
   colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'),
   px: $('px'), py: $('py'), btnPivotBottom: $('btnPivotBottom'), btnPivotCenter: $('btnPivotCenter'),
@@ -377,9 +409,16 @@ let timer=null;
 let pingDir=1;
 
 function enableUI(on){
-  for(const id of ['btnPlay','btnReset','btnJSON','btnZIP','btnSheet','btnAll','btnPivotBottom','btnPivotCenter']){
-    el[id].disabled=!on;
-  }
+  // Base UI that does not depend on JSZip
+  el.btnPlay.disabled = !on;
+  el.btnReset.disabled = !on;
+  el.btnJSON.disabled = !on;
+  el.btnSheet.disabled = !on;
+  el.btnPivotBottom.disabled = !on;
+  el.btnPivotCenter.disabled = !on;
+
+  // ZIP buttons depend on JSZip load status
+  syncZipButtons();
 }
 
 function setModeUI(){
@@ -426,7 +465,9 @@ function applyColorKeyIfNeeded(){
 }
 
 function computeGridFrames(){
-  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
+  const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
+    const margin=clamp(floorInt(el.margin.value,0),0,99999);
   const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
   const out=[];
 
@@ -437,20 +478,26 @@ function computeGridFrames(){
     const h=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
     if(w<=0||h<=0) return [];
 
-    const push=(r,c)=>out.push({x:margin+c*(w+spacing), y:margin+r*(h+spacing), w, h});
+        const startX=margin+offx;
+    const startY=margin+offy;
+    const push=(r,c)=>out.push({x:startX+c*(w+spacing), y:startY+r*(h+spacing), w, h});
     if(el.order.value==='row'){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) push(r,c);
     }else{
       for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) push(r,c);
     }
   } else {
-    const fw=clamp(floorInt(el.fw.value,64),1,img.width);
-    const fh=clamp(floorInt(el.fh.value,64),1,img.height);
-    const cols=Math.floor((img.width-2*margin+spacing)/(fw+spacing));
-    const rows=Math.floor((img.height-2*margin+spacing)/(fh+spacing));
+        const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
+        const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
+        const startX=margin+offx;
+    const startY=margin+offy;
+    const availW = img.width - startX - margin;
+    const availH = img.height - startY - margin;
+    const cols=Math.floor((availW+spacing)/(fw+spacing));
+        const rows=Math.floor((availH+spacing)/(fh+spacing));
     if(cols<=0||rows<=0) return [];
 
-    const gen=(r,c)=>({x:margin+c*(fw+spacing), y:margin+r*(fh+spacing), w:fw, h:fh});
+        const gen=(r,c)=>({x:startX+c*(fw+spacing), y:startY+r*(fh+spacing), w:fw, h:fh});
     if(el.order.value==='row'){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
         const fr=gen(r,c);
@@ -970,7 +1017,7 @@ async function exportAllZip(){
 el.mode.addEventListener('change', setModeUI);
 el.rangeMode.addEventListener('change', setRangeUI);
 
-for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt]){
+for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.offx,el.offy,el.order,el.trim,el.colorkey,el.keyColor,el.keyTol,el.rangeStart,el.rangeEnd,el.packMode,el.pad,el.pot,el.jsonFmt]){
   e.addEventListener('input', recompute);
   e.addEventListener('change', recompute);
 }
@@ -1002,20 +1049,73 @@ el.file.addEventListener('change', async ()=>{
   const f=el.file.files?.[0];
   if(!f) return;
   img=await loadImage(f);
+
+  // Defaults: start from image size (1 frame covering whole image)
+  el.mode.value='framesize';
+  el.fw.value=String(img.width);
+  el.fh.value=String(img.height);
+  el.cols.value='1';
+  el.rows.value='1';
+  el.margin.value='0';
+  el.spacing.value='0';
+  el.offx.value='0';
+  el.offy.value='0';
+  el.order.value='row';
+
   playing=false; stopTimer();
   selected=0;
   el.frameIdx.value='0'; el.idxVal.textContent='0';
   enableUI(true);
+  setModeUI();
+  setRangeUI();
   recompute();
 });
 
-el.cv.addEventListener('click', (ev)=>{
-  if(!img) return;
-  if(!el.pickMode.checked) return;
+// Drag to move grid offset (when not in Pick color mode)
+let dragging=false;
+let dragStart=null;
+let dragStartOff=null;
+let dragRAF=0;
+
+function canvasClientToCanvas(ev){
   const rect=el.cv.getBoundingClientRect();
   const x=(ev.clientX-rect.left) * (el.cv.width/rect.width);
   const y=(ev.clientY-rect.top) * (el.cv.height/rect.height);
-  pickColorAtCanvas(x,y);
+  return {x,y};
+}
+
+el.cv.addEventListener('mousedown', (ev)=>{
+  if(!img) return;
+  if(el.pickMode.checked) return;
+  dragging=true;
+  dragStart=canvasClientToCanvas(ev);
+  dragStartOff={x: floorInt(el.offx.value,0), y: floorInt(el.offy.value,0)};
+});
+
+window.addEventListener('mouseup', ()=>{ dragging=false; dragStart=null; dragStartOff=null; });
+
+window.addEventListener('mousemove', (ev)=>{
+  if(!dragging || !img) return;
+  if(!dragStart) return;
+  if(dragRAF) return;
+  dragRAF=requestAnimationFrame(()=>{
+    dragRAF=0;
+    const p=canvasClientToCanvas(ev);
+    const z=Number(el.zoom.value);
+    const dx=(p.x-dragStart.x)/z;
+    const dy=(p.y-dragStart.y)/z;
+    el.offx.value=String(Math.round(dragStartOff.x + dx));
+    el.offy.value=String(Math.round(dragStartOff.y + dy));
+    recompute();
+  });
+});
+
+// Click to pick color (only when Pick color enabled)
+el.cv.addEventListener('click', (ev)=>{
+  if(!img) return;
+  if(!el.pickMode.checked) return;
+  const p=canvasClientToCanvas(ev);
+  pickColorAtCanvas(p.x,p.y);
   el.colorkey.checked=true;
   recompute();
 });
