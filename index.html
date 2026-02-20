@@ -3,41 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sprite Tool v2.1 — Cut • Preview • Trim • Pack • Export</title>
+  <title>Sprite Tool v2.2 — Cut • Align • Preview • Trim • Pack • Export</title>
   <style>
     :root{
       --bg:#0b0f14; --panel:#111824; --panel2:#0b1220; --bd:#233044;
       --text:#e6edf3; --muted:rgba(230,237,243,.75);
-      --accent:#1f6feb; --accent2:#2d384a; --bad:#ff5050;
+      --accent:#1f6feb; --accent2:#2d384a; --warn:#ffcc66; --bad:#ff5050;
       --r:16px;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color-scheme: dark;
     }
     *{box-sizing:border-box}
     body{margin:0; background:var(--bg); color:var(--text);}
-    header{padding:14px 16px; border-bottom:1px solid var(--bd); background:linear-gradient(180deg, rgba(17,24,36,.95), rgba(11,15,20,.92)); position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);}
+
+    header{padding:14px 16px; border-bottom:1px solid var(--bd);
+      background:linear-gradient(180deg, rgba(17,24,36,.95), rgba(11,15,20,.92));
+      position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);
+    }
     header .top{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
     h1{margin:0; font-size:16px; letter-spacing:.2px;}
     .sub{font-size:12px; color:var(--muted)}
-    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--bd); border-radius:999px; background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)}
-    .wrap{display:grid; grid-template-columns: 380px 1fr; gap:12px; padding:12px 16px 16px;}
-    @media (max-width: 1050px){.wrap{grid-template-columns:1fr;}}
 
-    .card{background:var(--panel); border:1px solid var(--bd); border-radius:var(--r); padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,.25)}
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px;
+      border:1px solid var(--bd); border-radius:999px;
+      background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:12px;
+      padding:12px 16px;
+      align-items:stretch;
+    }
+    @media (max-width: 1100px){
+      .grid{grid-template-columns:1fr;}
+    }
+
+    .settingsWrap{padding: 0 16px 16px;}
+
+    .card{background:var(--panel); border:1px solid var(--bd); border-radius:var(--r);
+      padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,.25)
+    }
     .card h2{margin:0 0 8px; font-size:13px; color:var(--muted); font-weight:650; letter-spacing:.2px}
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+
     .hr{height:1px; background:var(--bd); margin:12px 0;}
 
     label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
     input[type="number"], input[type="text"], select{
       width:100%; padding:10px 10px; border-radius:12px; border:1px solid var(--bd);
-      background:var(--panel2); color:var(--text);
-      outline:none;
+      background:var(--panel2); color:var(--text); outline:none;
     }
     input[type="number"]:focus, input[type="text"]:focus, select:focus{border-color:rgba(31,111,235,.85)}
     input[type="range"]{width:100%}
 
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 650px){ .row{grid-template-columns:1fr;} }
+
     .btnrow{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 650px){ .btnrow{grid-template-columns:1fr;} }
+
     button{
       width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--bd);
       background:var(--accent); color:white; cursor:pointer; font-weight:650;
@@ -49,184 +74,82 @@
     .hint{font-size:12px; color:var(--muted); line-height:1.4}
     .hint b{color:var(--text)}
 
-    /* Right side */
-    .stage{display:grid; grid-template-rows: auto auto 1fr auto; gap:10px;}
     .toolbar{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
     .toolbar .group{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
 
-    .toggle{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--bd); border-radius:12px; background:rgba(11,18,32,.6); font-size:12px; color:var(--muted)}
+    .toggle{display:inline-flex; align-items:center; gap:8px; padding:8px 10px;
+      border:1px solid var(--bd); border-radius:12px; background:rgba(11,18,32,.6);
+      font-size:12px; color:var(--muted)
+    }
     .toggle input{accent-color: var(--accent)}
 
-    canvas.main{width:100%; background:var(--panel2); border:1px solid var(--bd); border-radius:var(--r);}
+    canvas{display:block; width:100%; background:var(--panel2); border:1px solid var(--bd); border-radius:var(--r);}
 
-    .previewBox{display:flex; gap:12px; align-items:stretch; background:rgba(11,18,32,.6); border:1px solid var(--bd); border-radius:var(--r); padding:10px;}
-    .previewBox canvas{width:240px; height:240px; border-radius:14px; border:1px solid rgba(35,48,68,.9); background:#0b1220;}
-    .previewBox .meta{min-width:220px; display:flex; flex-direction:column; gap:8px; justify-content:center}
+    .canvasWrap{position:relative;}
+    .cornerTag{
+      position:absolute; top:10px; right:10px;
+      font-size:12px; color:var(--muted);
+      padding:6px 10px; border-radius:999px; border:1px solid var(--bd);
+      background:rgba(11,18,32,.75);
+      pointer-events:none;
+    }
 
-    .filmstrip{display:flex; gap:8px; overflow:auto; padding:8px; border:1px solid var(--bd); border-radius:var(--r); background:rgba(11,18,32,.6)}
-    .thumb{width:74px; min-width:74px; border:1px solid rgba(35,48,68,.9); border-radius:12px; background:rgba(0,0,0,.25); display:flex; flex-direction:column; gap:6px; padding:6px; cursor:pointer}
+    .filmstrip{display:flex; gap:8px; overflow:auto; padding:8px; border:1px solid var(--bd);
+      border-radius:var(--r); background:rgba(11,18,32,.6)
+    }
+    .thumb{width:74px; min-width:74px; border:1px solid rgba(35,48,68,.9); border-radius:12px;
+      background:rgba(0,0,0,.25); display:flex; flex-direction:column; gap:6px; padding:6px; cursor:pointer
+    }
     .thumb.sel{outline:2px solid rgba(31,111,235,.95);}
     .thumb canvas{width:100%; height:auto; border:0; border-radius:10px; background:transparent}
     .thumb .t{font-size:11px; color:var(--muted); text-align:center}
 
-    .kbd{font-size:11px; padding:2px 6px; border:1px solid var(--bd); border-radius:8px; background:rgba(11,18,32,.6); color:var(--muted)}
+    .kbd{font-size:11px; padding:2px 6px; border:1px solid var(--bd); border-radius:8px;
+      background:rgba(11,18,32,.6); color:var(--muted)
+    }
+
+    details{border:1px solid var(--bd); border-radius:14px; background:rgba(11,18,32,.35); padding:10px;}
+    details + details{margin-top:10px;}
+    summary{cursor:pointer; list-style:none; font-weight:700; color:var(--text);}
+    summary::-webkit-details-marker{display:none;}
+    summary .small{font-weight:600; color:var(--muted); font-size:12px; margin-left:8px;}
+
+    .warn{color:var(--warn)}
   </style>
 </head>
 <body>
 <header>
   <div class="top">
     <div>
-      <h1>Sprite Tool v2.1 — Cut • Preview • Trim • Pack • Export</h1>
-      <div class="sub">รันในเบราว์เซอร์ (local) • ไม่อัปโหลดรูปออก • คลิกบน thumbnail เพื่อกำหนด pivot • รองรับ Trim/Pack/JSON</div>
+      <h1>Sprite Tool v2.2 — Cut • Align • Preview • Trim • Pack • Export</h1>
+      <div class="sub">Layout แบบ 4 กล่องตามที่ขอ • กล่องบน 3 ใบ + กล่องตั้งค่าด้านล่าง • ลากบนภาพเพื่อเลื่อนกริด</div>
     </div>
     <div class="pill"><span id="imgInfo">No image</span> • <span id="frameInfo">0 frames</span></div>
   </div>
 </header>
 
-<div class="wrap">
-  <!-- LEFT PANEL -->
+<!-- TOP: 3 boxes -->
+<div class="grid">
+  <!-- Box 1: Animation -->
   <div class="card">
-    <h2>Input</h2>
-    <label>ใส่รูป (PNG แนะนำ)</label>
-    <input id="file" type="file" accept="image/*" />
-
-    <div class="hr"></div>
-
-    <h2>Cut settings</h2>
-    <label>โหมดการตัด</label>
-    <select id="mode">
-      <option value="colsrows">กำหนด Columns + Rows</option>
-      <option value="framesize">กำหนด Frame Width + Height</option>
-    </select>
-
-    <div id="colsrowsBox">
-      <div class="row">
-        <div>
-          <label>Columns</label>
-          <input id="cols" type="number" min="1" value="4" />
-        </div>
-        <div>
-          <label>Rows</label>
-          <input id="rows" type="number" min="1" value="1" />
-        </div>
+    <h2>1) Animation (ผลลัพธ์)</h2>
+    <div class="toolbar">
+      <div class="group">
+        <button id="btnPlay" class="secondary" disabled>▶ Play / Pause</button>
+        <button id="btnReset" class="ghost" disabled>Reset</button>
       </div>
-    </div>
-
-    <div id="framesizeBox" style="display:none;">
-      <div class="row">
-        <div>
-          <label>Frame Width (px)</label>
-          <input id="fw" type="number" min="1" value="64" />
-        </div>
-        <div>
-          <label>Frame Height (px)</label>
-          <input id="fh" type="number" min="1" value="64" />
-        </div>
-      </div>
-      <div class="hint">ระบบจะคำนวณ cols/rows จากขนาดภาพให้อัตโนมัติ (คง margin/spacing)</div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Margin (px)</label>
-        <input id="margin" type="number" min="0" value="0" />
-      </div>
-      <div>
-        <label>Spacing (px)</label>
-        <input id="spacing" type="number" min="0" value="0" />
+      <div class="group">
+        <span class="pill">FPS: <span id="fpsVal">8</span></span>
       </div>
     </div>
 
     <div class="row">
       <div>
-        <label>Frame Offset X (px)</label>
-        <input id="offx" type="number" value="0" />
-      </div>
-      <div>
-        <label>Frame Offset Y (px)</label>
-        <input id="offy" type="number" value="0" />
-      </div>
-    </div>
-    <div class="hint">ใช้เพื่อเลื่อนกรอบเฟรม (grid) ให้ตรงกับรูปที่ไม่อยู่กึ่งกลาง • คุณสามารถลากกรอบด้วยเมาส์บนจอ Canvas ได้</div>
-
-    <div class="row">
-      <div>
-        <label>Order</label>
-        <select id="order">
-          <option value="row">Row-major (ซ้าย→ขวา แล้วลงบรรทัด)</option>
-          <option value="col">Col-major (บน→ล่าง แล้วไปคอลัมน์ถัดไป)</option>
-        </select>
-      </div>
-      <div>
-        <label>Frame Range</label>
-        <select id="rangeMode">
-          <option value="all">ทั้งหมด</option>
-          <option value="custom">กำหนด Start/End</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="rangeBox" class="row" style="display:none;">
-      <div>
-        <label>Start index</label>
-        <input id="rangeStart" type="number" min="0" value="0" />
-      </div>
-      <div>
-        <label>End index (รวม)</label>
-        <input id="rangeEnd" type="number" min="0" value="0" />
-      </div>
-    </div>
-
-    <div class="hr"></div>
-
-    <h2>Pivot & Trim</h2>
-    <div class="row">
-      <div>
-        <label>Pivot X (0..1)</label>
-        <input id="px" type="number" step="0.01" min="0" max="1" value="0.5" />
-      </div>
-      <div>
-        <label>Pivot Y (0..1)</label>
-        <input id="py" type="number" step="0.01" min="0" max="1" value="1.0" />
-      </div>
-    </div>
-    <div class="btnrow">
-      <button id="btnPivotBottom" class="secondary" disabled>Pivot = Bottom-Center</button>
-      <button id="btnPivotCenter" class="secondary" disabled>Pivot = Center</button>
-    </div>
-
-    <label class="toggle" style="margin-top:10px;">
-      <input id="trim" type="checkbox" />
-      <span><b>Trim</b> โปร่งใสออก (ต่อเฟรม) + เก็บ offset/size ใน JSON</span>
-    </label>
-
-    <label class="toggle">
-      <input id="colorkey" type="checkbox" />
-      <span><b>Color key</b> ลบสีพื้นหลัง (เลือกสีด้วย Eyedropper)</span>
-    </label>
-
-    <div class="row" style="align-items:center;">
-      <div>
-        <label>Key color</label>
-        <input id="keyColor" type="text" value="#000000" />
-      </div>
-      <div>
-        <label>Tolerance (0..255)</label>
-        <input id="keyTol" type="number" min="0" max="255" value="20" />
-      </div>
-    </div>
-    <div class="hint">Tip: เปิด <b>Pick color</b> ทางขวา แล้วคลิกบนภาพเพื่อดูดสี</div>
-
-    <div class="hr"></div>
-
-    <h2>Preview</h2>
-    <div class="row">
-      <div>
-        <label>FPS: <span class="pill" id="fpsVal">8</span></label>
+        <label>FPS</label>
         <input id="fps" type="range" min="1" max="30" value="8" />
       </div>
       <div>
-        <label>Frame index: <span class="pill" id="idxVal">0</span></label>
+        <label>Frame index <span class="pill" id="idxVal">0</span></label>
         <input id="frameIdx" type="range" min="0" max="0" value="0" />
       </div>
     </div>
@@ -249,69 +172,21 @@
       </div>
     </div>
 
-    <div class="btnrow">
-      <button id="btnPlay" class="secondary" disabled>▶ Play / Pause</button>
-      <button id="btnReset" class="ghost" disabled>Reset</button>
-    </div>
-
-    <div class="hr"></div>
-
-    <h2>Export</h2>
-    <label>File name <span style="opacity:.8">(ไม่ต้องใส่นามสกุล)</span></label>
-    <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" />
-    <div class="hint">ระบบจะใช้ชื่อนี้เป็น prefix ของไฟล์ที่ export เช่น <b>&lt;file&gt;.json</b>, <b>&lt;file&gt;_frames.zip</b>, <b>&lt;file&gt;_sheet.png</b></div>
-
-    <div class="row">
-      <div>
-        <label>Pack sprite sheet</label>
-        <select id="packMode">
-          <option value="none">ไม่ pack (ใช้ภาพเดิม)</option>
-          <option value="grid">Pack เป็น grid ใหม่</option>
-          <option value="shelf">Pack แบบ shelf (ประหยัดพื้นที่)</option>
-        </select>
-      </div>
-      <div>
-        <label>Padding (px)</label>
-        <input id="pad" type="number" min="0" value="2" />
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Power-of-two (POT)</label>
-        <select id="pot">
-          <option value="no">No</option>
-          <option value="yes">Yes (ขยายเป็น 2^n)</option>
-        </select>
-      </div>
-      <div>
-        <label>JSON format</label>
-        <select id="jsonFmt">
-          <option value="simple">Simple</option>
-          <option value="tp">TexturePacker-ish</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="btnrow">
-      <button id="btnJSON" disabled>Export JSON</button>
-      <button id="btnZIP" disabled>Download Frames (ZIP)</button>
-    </div>
-    <div class="btnrow">
-      <button id="btnSheet" disabled>Download Packed Sheet (PNG)</button>
-      <button id="btnAll" class="secondary" disabled>Download ALL (ZIP)</button>
+    <div class="canvasWrap" style="margin-top:10px;">
+      <canvas id="anim" width="520" height="360"></canvas>
+      <div class="cornerTag" id="animInfo">-</div>
     </div>
 
     <div class="hint" style="margin-top:10px;">
-      <b>คีย์ลัด:</b> <span class="kbd">Space</span> play/pause • <span class="kbd">←</span>/<span class="kbd">→</span> เปลี่ยนเฟรม • คลิก thumbnail เพื่อเลือกเฟรม/ตั้ง pivot
+      <b>คีย์ลัด:</b> <span class="kbd">Space</span> play/pause • <span class="kbd">←</span>/<span class="kbd">→</span> เปลี่ยนเฟรม
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="card stage">
+  <!-- Box 2: Uploaded image preview + zoom -->
+  <div class="card">
+    <h2>2) Image Preview (ภาพที่อัปโหลด)</h2>
     <div class="toolbar">
       <div class="group">
-        <span class="pill">Canvas</span>
         <label class="toggle"><input id="showGrid" type="checkbox" checked/> Show grid</label>
         <label class="toggle"><input id="showPivot" type="checkbox" checked/> Show pivot</label>
         <label class="toggle"><input id="pickMode" type="checkbox"/> Pick color</label>
@@ -327,110 +202,323 @@
       </div>
     </div>
 
-    <div class="previewBox">
-      <canvas id="prev" width="240" height="240"></canvas>
-      <div class="meta hint">
+    <div class="canvasWrap" style="margin-top:10px;">
+      <canvas id="cv" width="520" height="360"></canvas>
+      <div class="cornerTag" id="imgCorner">No image</div>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">
+      <span class="warn">ลากบนภาพ</span> เพื่อเลื่อนกรอบเฟรม (grid offset) • ถ้าเปิด <b>Pick color</b> จะใช้คลิกดูดสีแทน
+    </div>
+  </div>
+
+  <!-- Box 3: Frame picker/selection -->
+  <div class="card">
+    <h2>3) Frame Picker (เลือก/จัดตำแหน่งเฟรม)</h2>
+
+    <div class="row">
+      <div>
+        <label>Selected frame preview</label>
+        <canvas id="prev" width="240" height="240"></canvas>
+      </div>
+      <div class="hint" style="padding-top:28px;">
         <div class="pill">Selected frame</div>
-        <div id="prevInfo">-</div>
-        <div style="opacity:.85">ถ้า <b>Trim</b> เปิดอยู่ จะพรีวิวเฉพาะส่วนที่ถูก trim</div>
+        <div id="prevInfo" style="margin-top:8px;">-</div>
+        <div style="opacity:.85; margin-top:8px;">คลิกใน thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก</div>
       </div>
     </div>
 
-    <canvas id="cv" class="main" width="1200" height="720"></canvas>
+    <div class="hr"></div>
 
-    <div>
-      <div class="hint" style="margin-bottom:8px;">Filmstrip (คลิกเพื่อเลือกเฟรม • คลิกใน thumbnail เพื่อกำหนด pivot ตามจุดที่คลิก)</div>
-      <div id="strip" class="filmstrip"></div>
+    <div class="hint" style="margin-bottom:8px;">Filmstrip</div>
+    <div id="strip" class="filmstrip"></div>
+  </div>
+</div>
+
+<!-- Box 4: Settings (full width) -->
+<div class="settingsWrap">
+  <div class="card">
+    <h2>4) Settings</h2>
+
+    <div class="row">
+      <div>
+        <label>ใส่รูป (PNG แนะนำ)</label>
+        <input id="file" type="file" accept="image/*" />
+      </div>
+      <div>
+        <label>File name (สำหรับ export)</label>
+        <input id="state" type="text" value="" placeholder="เช่น idle_walk / run_01 / sleep" />
+      </div>
     </div>
+
+    <div class="hr"></div>
+
+    <details open>
+      <summary>Cut / Grid <span class="small">กำหนดจำนวนเฟรม + คอลัมน์/แถว + ขนาดเฟรม</span></summary>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Cut mode</label>
+          <select id="mode">
+            <option value="colsrows">Columns + Rows</option>
+            <option value="framesize">Frame Width + Height</option>
+          </select>
+        </div>
+        <div>
+          <label>Order</label>
+          <select id="order">
+            <option value="row">Row-major</option>
+            <option value="col">Col-major</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Columns</label>
+          <input id="cols" type="number" min="1" value="1" />
+        </div>
+        <div>
+          <label>Rows</label>
+          <input id="rows" type="number" min="1" value="1" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Frame Width (px)</label>
+          <input id="fw" type="number" min="1" value="64" />
+        </div>
+        <div>
+          <label>Frame Height (px)</label>
+          <input id="fh" type="number" min="1" value="64" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Margin (px)</label>
+          <input id="margin" type="number" min="0" value="0" />
+        </div>
+        <div>
+          <label>Spacing (px)</label>
+          <input id="spacing" type="number" min="0" value="0" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Frame Offset X (px)</label>
+          <input id="offx" type="number" value="0" />
+        </div>
+        <div>
+          <label>Frame Offset Y (px)</label>
+          <input id="offy" type="number" value="0" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Frame Range</label>
+          <select id="rangeMode">
+            <option value="all">All</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="hint" style="padding-top:28px;">Tip: ถ้า grid ไม่ตรงรูป ให้ปรับ Offset หรือ <b>ลากบนภาพ</b> (กล่อง 2)</div>
+      </div>
+
+      <div id="rangeBox" class="row" style="display:none;">
+        <div>
+          <label>Start index</label>
+          <input id="rangeStart" type="number" min="0" value="0" />
+        </div>
+        <div>
+          <label>End index (inclusive)</label>
+          <input id="rangeEnd" type="number" min="0" value="0" />
+        </div>
+      </div>
+
+      <div class="hint" style="margin-top:10px;">
+        <b>Total (หลัง apply range):</b> <span id="totalHint">0</span>
+      </div>
+    </details>
+
+    <details>
+      <summary>Pivot / Trim / Color Key</summary>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Pivot X (0..1)</label>
+          <input id="px" type="number" step="0.01" min="0" max="1" value="0.5" />
+        </div>
+        <div>
+          <label>Pivot Y (0..1)</label>
+          <input id="py" type="number" step="0.01" min="0" max="1" value="1.0" />
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button id="btnPivotBottom" class="secondary" disabled>Pivot = Bottom-Center</button>
+        <button id="btnPivotCenter" class="secondary" disabled>Pivot = Center</button>
+      </div>
+
+      <label class="toggle" style="margin-top:10px;">
+        <input id="trim" type="checkbox" />
+        <span><b>Trim</b> โปร่งใสออก (ต่อเฟรม) + เก็บ offset/size ใน JSON</span>
+      </label>
+
+      <label class="toggle">
+        <input id="colorkey" type="checkbox" />
+        <span><b>Color key</b> ลบสีพื้นหลัง (ใช้ Pick color ในกล่อง 2)</span>
+      </label>
+
+      <div class="row" style="align-items:center;">
+        <div>
+          <label>Key color</label>
+          <input id="keyColor" type="text" value="#000000" />
+        </div>
+        <div>
+          <label>Tolerance (0..255)</label>
+          <input id="keyTol" type="number" min="0" max="255" value="20" />
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Pack / Export</summary>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Pack sprite sheet</label>
+          <select id="packMode">
+            <option value="none">No pack (source)</option>
+            <option value="grid">Grid pack</option>
+            <option value="shelf">Shelf pack</option>
+          </select>
+        </div>
+        <div>
+          <label>Padding (px)</label>
+          <input id="pad" type="number" min="0" value="2" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Power-of-two (POT)</label>
+          <select id="pot">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div>
+          <label>JSON format</label>
+          <select id="jsonFmt">
+            <option value="simple">Simple</option>
+            <option value="tp">TexturePacker-ish</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button id="btnJSON" disabled>Export JSON</button>
+        <button id="btnSheet" disabled>Download Sheet (PNG)</button>
+      </div>
+      <div class="btnrow">
+        <button id="btnZIP" disabled>Download Frames (ZIP)</button>
+        <button id="btnAll" class="secondary" disabled>Download ALL (ZIP)</button>
+      </div>
+
+      <div class="hint" style="margin-top:10px;">
+        ถ้า ZIP ปิดอยู่ แปลว่า JSZip โหลดจาก CDN ไม่ได้ (องค์กรบล็อก/ออฟไลน์)
+      </div>
+    </details>
+
   </div>
 </div>
 
 <script>
-// JSZip CDN (ถ้าองค์กรบล็อก CDN → ZIP export จะไม่ทำงาน)
-let jszipReady = false;
-(function(){
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
-  s.async = true;
-  s.onload = ()=>{ jszipReady = true; syncZipButtons(); };
-  s.onerror = ()=>{
-    jszipReady = false;
-    console.warn('JSZip failed to load (CDN blocked or offline). ZIP export disabled.');
-    syncZipButtons();
-  };
-  document.head.appendChild(s);
-})();
-
-function syncZipButtons(){
-  // ZIP requires JSZip. Other exports do not.
-  if(!img){
-    el.btnZIP.disabled = true;
-    el.btnAll.disabled = true;
-    return;
-  }
-  el.btnZIP.disabled = !jszipReady;
-  el.btnAll.disabled = !jszipReady;
-}
-
-
+// ===== Boot helpers =====
 const $=(id)=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const floorInt=(v,def=0)=>{const n=Math.floor(Number(v)); return Number.isFinite(n)?n:def;};
 const nextPow2=(n)=>{let p=1; while(p<n) p<<=1; return p;};
 const hexToRgb=(hex)=>{const m=String(hex).trim().match(/^#?([0-9a-f]{6})$/i); if(!m) return {r:0,g:0,b:0}; const x=parseInt(m[1],16); return {r:(x>>16)&255, g:(x>>8)&255, b:x&255};};
 
+// ===== Elements =====
 const el={
-  file: $('file'), mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
+  // top boxes
+  anim: $('anim'), animInfo: $('animInfo'),
+  cv: $('cv'), imgCorner: $('imgCorner'),
+  prev: $('prev'), prevInfo: $('prevInfo'), strip: $('strip'),
+
+  // header info
+  imgInfo: $('imgInfo'), frameInfo: $('frameInfo'), totalHint: $('totalHint'),
+
+  // controls
+  file: $('file'), state: $('state'),
+  mode: $('mode'), cols: $('cols'), rows: $('rows'), fw: $('fw'), fh: $('fh'),
   margin: $('margin'), spacing: $('spacing'), offx: $('offx'), offy: $('offy'), order: $('order'),
   rangeMode: $('rangeMode'), rangeStart: $('rangeStart'), rangeEnd: $('rangeEnd'), rangeBox: $('rangeBox'),
-  colsrowsBox: $('colsrowsBox'), framesizeBox: $('framesizeBox'),
+
   px: $('px'), py: $('py'), btnPivotBottom: $('btnPivotBottom'), btnPivotCenter: $('btnPivotCenter'),
   trim: $('trim'), colorkey: $('colorkey'), keyColor: $('keyColor'), keyTol: $('keyTol'),
+
   fps: $('fps'), fpsVal: $('fpsVal'), frameIdx: $('frameIdx'), idxVal: $('idxVal'),
-  loopMode: $('loopMode'), dirMode: $('dirMode'), btnPlay: $('btnPlay'), btnReset: $('btnReset'),
-  state: $('state'), packMode: $('packMode'), pad: $('pad'), pot: $('pot'), jsonFmt: $('jsonFmt'),
-  btnJSON: $('btnJSON'), btnZIP: $('btnZIP'), btnSheet: $('btnSheet'), btnAll: $('btnAll'),
+  loopMode: $('loopMode'), dirMode: $('dirMode'),
+
   showGrid: $('showGrid'), showPivot: $('showPivot'), pickMode: $('pickMode'),
   zoom: $('zoom'), zoomVal: $('zoomVal'), bg: $('bg'),
-  imgInfo: $('imgInfo'), frameInfo: $('frameInfo'),
-  cv: $('cv'), prev: $('prev'), prevInfo: $('prevInfo'), strip: $('strip')
+
+  packMode: $('packMode'), pad: $('pad'), pot: $('pot'), jsonFmt: $('jsonFmt'),
+
+  btnPlay: $('btnPlay'), btnReset: $('btnReset'),
+  btnJSON: $('btnJSON'), btnZIP: $('btnZIP'), btnSheet: $('btnSheet'), btnAll: $('btnAll'),
 };
 
 const ctx=el.cv.getContext('2d');
+const actx=el.anim.getContext('2d');
 const pctx=el.prev.getContext('2d');
 
+ctx.imageSmoothingEnabled=false;
+actx.imageSmoothingEnabled=false;
+pctx.imageSmoothingEnabled=false;
+
+// ===== JSZip loader =====
+let jszipReady=false;
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+  s.async=true;
+  s.onload=()=>{jszipReady=true; syncZipButtons();};
+  s.onerror=()=>{jszipReady=false; console.warn('JSZip failed to load. ZIP export disabled.'); syncZipButtons();};
+  document.head.appendChild(s);
+})();
+
+function syncZipButtons(){
+  if(!img){ el.btnZIP.disabled=true; el.btnAll.disabled=true; return; }
+  el.btnZIP.disabled=!jszipReady;
+  el.btnAll.disabled=!jszipReady;
+}
+
+// ===== State =====
 let img=null;
 let srcCanvas=null, srcCtx=null;
-let frames=[];     // all frames
-let viewFrames=[]; // ranged frames
+let frames=[];
+let viewFrames=[];
 let selected=0;
 let playing=false;
 let timer=null;
 let pingDir=1;
 
+// ===== Core utilities =====
 function enableUI(on){
-  // Base UI that does not depend on JSZip
-  el.btnPlay.disabled = !on;
-  el.btnReset.disabled = !on;
-  el.btnJSON.disabled = !on;
-  el.btnSheet.disabled = !on;
-  el.btnPivotBottom.disabled = !on;
-  el.btnPivotCenter.disabled = !on;
-
-  // ZIP buttons depend on JSZip load status
+  el.btnPlay.disabled=!on;
+  el.btnReset.disabled=!on;
+  el.btnJSON.disabled=!on;
+  el.btnSheet.disabled=!on;
+  el.btnPivotBottom.disabled=!on;
+  el.btnPivotCenter.disabled=!on;
   syncZipButtons();
-}
-
-function setModeUI(){
-  const m=el.mode.value;
-  el.colsrowsBox.style.display=(m==='colsrows')?'':'none';
-  el.framesizeBox.style.display=(m==='framesize')?'':'none';
-  recompute();
-}
-
-function setRangeUI(){
-  el.rangeBox.style.display=(el.rangeMode.value==='custom')?'':'none';
-  recompute();
 }
 
 async function loadImage(file){
@@ -464,114 +552,6 @@ function applyColorKeyIfNeeded(){
   srcCtx.putImageData(im,0,0);
 }
 
-function computeGridFrames(){
-  const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
-  const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
-    const margin=clamp(floorInt(el.margin.value,0),0,99999);
-  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
-  const out=[];
-
-  if(el.mode.value==='colsrows'){
-    const cols=clamp(floorInt(el.cols.value,1),1,99999);
-    const rows=clamp(floorInt(el.rows.value,1),1,99999);
-    const w=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
-    const h=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
-    if(w<=0||h<=0) return [];
-
-        const startX=margin+offx;
-    const startY=margin+offy;
-    const push=(r,c)=>out.push({x:startX+c*(w+spacing), y:startY+r*(h+spacing), w, h});
-    if(el.order.value==='row'){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) push(r,c);
-    }else{
-      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) push(r,c);
-    }
-  } else {
-        const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
-        const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
-        const startX=margin+offx;
-    const startY=margin+offy;
-    const availW = img.width - startX - margin;
-    const availH = img.height - startY - margin;
-    const cols=Math.floor((availW+spacing)/(fw+spacing));
-        const rows=Math.floor((availH+spacing)/(fh+spacing));
-    if(cols<=0||rows<=0) return [];
-
-        const gen=(r,c)=>({x:startX+c*(fw+spacing), y:startY+r*(fh+spacing), w:fw, h:fh});
-    if(el.order.value==='row'){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const fr=gen(r,c);
-        if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
-      }
-    }else{
-      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
-        const fr=gen(r,c);
-        if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
-      }
-    }
-  }
-  return out;
-}
-
-function computeTrimForFrame(fr){
-  const im=srcCtx.getImageData(fr.x, fr.y, fr.w, fr.h);
-  const d=im.data;
-  let minX=fr.w, minY=fr.h, maxX=-1, maxY=-1;
-  for(let y=0;y<fr.h;y++){
-    for(let x=0;x<fr.w;x++){
-      const a=d[(y*fr.w+x)*4+3];
-      if(a!==0){
-        if(x<minX) minX=x;
-        if(y<minY) minY=y;
-        if(x>maxX) maxX=x;
-        if(y>maxY) maxY=y;
-      }
-    }
-  }
-  if(maxX<minX||maxY<minY) return {x:0,y:0,w:1,h:1,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:true};
-  const w=maxX-minX+1, h=maxY-minY+1;
-  return {x:minX,y:minY,w,h,offX:minX,offY:minY,srcW:fr.w,srcH:fr.h,empty:false};
-}
-
-function applyRange(list){
-  if(el.rangeMode.value!=='custom') return list;
-  const s=clamp(floorInt(el.rangeStart.value,0),0,Math.max(0,list.length-1));
-  const e=clamp(floorInt(el.rangeEnd.value,0),0,Math.max(0,list.length-1));
-  const a=Math.min(s,e), b=Math.max(s,e);
-  return list.slice(a,b+1);
-}
-
-function recompute(){
-  if(!img) { draw(); return; }
-
-  buildSrcCanvas();
-  applyColorKeyIfNeeded();
-
-  frames=computeGridFrames();
-  if(el.trim.checked){
-    for(const fr of frames) fr.trim=computeTrimForFrame(fr);
-  }else{
-    for(const fr of frames) delete fr.trim;
-  }
-
-  viewFrames=applyRange(frames);
-
-  el.frameIdx.max=String(Math.max(0, viewFrames.length-1));
-  selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0, viewFrames.length-1));
-  el.frameIdx.value=String(selected);
-  el.idxVal.textContent=String(selected);
-
-  el.rangeStart.max=String(Math.max(0, frames.length-1));
-  el.rangeEnd.max=String(Math.max(0, frames.length-1));
-
-  el.imgInfo.textContent=`${img.width}×${img.height}px`;
-  el.frameInfo.textContent=`${viewFrames.length} frames`;
-
-  buildFilmstrip();
-  enableUI(true);
-  draw();
-}
-
 function paintChecker(g, W, H){
   const s=24;
   g.fillStyle='#0b1220';
@@ -585,39 +565,140 @@ function paintChecker(g, W, H){
   }
 }
 
-function bgPaint(){
-  const W=el.cv.width, H=el.cv.height;
-  if(el.bg.value==='checker') paintChecker(ctx, W, H);
-  else if(el.bg.value==='light'){ ctx.fillStyle='#e9eef6'; ctx.fillRect(0,0,W,H); }
-  else { ctx.fillStyle='#0b1220'; ctx.fillRect(0,0,W,H); }
+function bgPaint(g, W, H){
+  if(el.bg.value==='checker') paintChecker(g, W, H);
+  else if(el.bg.value==='light'){ g.fillStyle='#e9eef6'; g.fillRect(0,0,W,H); }
+  else { g.fillStyle='#0b1220'; g.fillRect(0,0,W,H); }
 }
 
-function drawSelectedPreview(fr){
-  paintChecker(pctx, el.prev.width, el.prev.height);
-  if(!img || !fr){
-    el.prevInfo.textContent='-';
-    return;
+function computeTrimForFrame(fr){
+  // If frame goes out of bounds, clamp before getImageData to avoid exception
+  const sx=clamp(fr.x,0,img.width-1);
+  const sy=clamp(fr.y,0,img.height-1);
+  const sw=clamp(fr.w,1,img.width-sx);
+  const sh=clamp(fr.h,1,img.height-sy);
+  const im=srcCtx.getImageData(sx, sy, sw, sh);
+  const d=im.data;
+  let minX=sw, minY=sh, maxX=-1, maxY=-1;
+  for(let y=0;y<sh;y++){
+    for(let x=0;x<sw;x++){
+      const a=d[(y*sw+x)*4+3];
+      if(a!==0){
+        if(x<minX) minX=x;
+        if(y<minY) minY=y;
+        if(x>maxX) maxX=x;
+        if(y>maxY) maxY=y;
+      }
+    }
   }
-  const src = (el.trim.checked && fr.trim) ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
-  const pad=14;
-  const W=el.prev.width, H=el.prev.height;
-  const scale=Math.min((W-2*pad)/src.w, (H-2*pad)/src.h);
-  const dw=Math.max(1, Math.floor(src.w*scale));
-  const dh=Math.max(1, Math.floor(src.h*scale));
-  const dx=Math.floor((W-dw)/2);
-  const dy=Math.floor((H-dh)/2);
-  pctx.imageSmoothingEnabled=false;
-  pctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, dw, dh);
-  el.prevInfo.innerHTML = `Frame <b>${selected}</b><br/>Rect: ${fr.w}×${fr.h}` + (el.trim.checked?`<br/>Trim: ${src.w}×${src.h}`:'');
+  if(maxX<minX||maxY<minY) return {x:0,y:0,w:1,h:1,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:true};
+  const w=maxX-minX+1, h=maxY-minY+1;
+  return {x:minX,y:minY,w,h,offX:minX,offY:minY,srcW:fr.w,srcH:fr.h,empty:false};
 }
 
-function draw(){
-  bgPaint();
+function computeGridFrames(){
+  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
+  const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
+  const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
+  const startX=margin+offx;
+  const startY=margin+offy;
+
+  const out=[];
+
+  if(el.mode.value==='colsrows'){
+    const cols=clamp(floorInt(el.cols.value,1),1,99999);
+    const rows=clamp(floorInt(el.rows.value,1),1,99999);
+    const w=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
+    const h=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
+    if(w<=0||h<=0) return [];
+
+    const push=(r,c)=>out.push({x:startX+c*(w+spacing), y:startY+r*(h+spacing), w, h});
+    if(el.order.value==='row'){
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) push(r,c);
+    }else{
+      for(let c=0;c<cols;c++) for(let r=0;r<rows;r++) push(r,c);
+    }
+    return out;
+  }
+
+  // framesize
+  const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
+  const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
+  const availW = img.width - startX - margin;
+  const availH = img.height - startY - margin;
+  const cols=Math.floor((availW+spacing)/(fw+spacing));
+  const rows=Math.floor((availH+spacing)/(fh+spacing));
+  if(cols<=0||rows<=0) return [];
+
+  const gen=(r,c)=>({x:startX+c*(fw+spacing), y:startY+r*(fh+spacing), w:fw, h:fh});
+  if(el.order.value==='row'){
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const fr=gen(r,c);
+      if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
+    }
+  }else{
+    for(let c=0;c<cols;c++) for(let r=0;r<rows;r++){
+      const fr=gen(r,c);
+      if(fr.x+fr.w<=img.width-margin+1 && fr.y+fr.h<=img.height-margin+1) out.push(fr);
+    }
+  }
+  return out;
+}
+
+function applyRange(list){
+  if(el.rangeMode.value!=='custom') return list;
+  const s=clamp(floorInt(el.rangeStart.value,0),0,Math.max(0,list.length-1));
+  const e=clamp(floorInt(el.rangeEnd.value,0),0,Math.max(0,list.length-1));
+  const a=Math.min(s,e), b=Math.max(s,e);
+  return list.slice(a,b+1);
+}
+
+function updateDerivedFields(){
+  // Keep cols/rows in sync when using framesize, and keep frame size in sync when using colsrows
+  if(!img) return;
+
+  const margin=clamp(floorInt(el.margin.value,0),0,99999);
+  const spacing=clamp(floorInt(el.spacing.value,0),0,99999);
+
+  if(el.mode.value==='framesize'){
+    const offx=clamp(floorInt(el.offx.value,0),-99999,99999);
+    const offy=clamp(floorInt(el.offy.value,0),-99999,99999);
+    const startX=margin+offx;
+    const startY=margin+offy;
+    const fw=clamp(floorInt(el.fw.value,Math.max(1,img.width)),1,img.width*10);
+    const fh=clamp(floorInt(el.fh.value,Math.max(1,img.height)),1,img.height*10);
+    const availW = img.width - startX - margin;
+    const availH = img.height - startY - margin;
+    const cols=Math.max(1, Math.floor((availW+spacing)/(fw+spacing)));
+    const rows=Math.max(1, Math.floor((availH+spacing)/(fh+spacing)));
+    el.cols.value=String(cols);
+    el.rows.value=String(rows);
+  } else {
+    const cols=clamp(floorInt(el.cols.value,1),1,99999);
+    const rows=clamp(floorInt(el.rows.value,1),1,99999);
+    const fw=Math.floor((img.width-2*margin-(cols-1)*spacing)/cols);
+    const fh=Math.floor((img.height-2*margin-(rows-1)*spacing)/rows);
+    if(fw>0) el.fw.value=String(fw);
+    if(fh>0) el.fh.value=String(fh);
+  }
+}
+
+function getFilePrefix(){
+  const raw=(el.state.value||'').trim();
+  return raw.length?raw:'sprite';
+}
+
+// ===== Rendering =====
+function drawImageCanvas(){
+  const W=el.cv.width, H=el.cv.height;
+  bgPaint(ctx, W, H);
+
   if(!img){
     ctx.fillStyle='#e6edf3';
     ctx.font='16px system-ui';
     ctx.fillText('อัปโหลดรูปเพื่อเริ่ม', 20, 40);
-    drawSelectedPreview(null);
+    el.imgCorner.textContent='No image';
     return;
   }
 
@@ -625,18 +706,22 @@ function draw(){
   el.zoomVal.textContent=`${z.toFixed(2)}x`;
 
   const iw=img.width*z, ih=img.height*z;
-  const ox=(el.cv.width-iw)/2;
-  const oy=(el.cv.height-ih)/2;
+  const ox=(W-iw)/2;
+  const oy=(H-ih)/2;
 
   ctx.imageSmoothingEnabled=false;
   ctx.drawImage(srcCanvas, ox, oy, iw, ih);
 
+  // Grid overlay
   if(el.showGrid.checked){
     ctx.strokeStyle='rgba(180,200,255,.22)';
     ctx.lineWidth=1;
-    for(const fr of viewFrames) ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
+    for(const fr of viewFrames){
+      ctx.strokeRect(ox+fr.x*z, oy+fr.y*z, fr.w*z, fr.h*z);
+    }
   }
 
+  // Selected
   const fr=viewFrames[selected];
   if(fr){
     ctx.strokeStyle='rgba(31,111,235,.95)';
@@ -660,7 +745,58 @@ function draw(){
     }
   }
 
-  drawSelectedPreview(fr);
+  el.imgCorner.textContent=`${img.width}×${img.height}px`;
+}
+
+function drawSelectedPreview(){
+  paintChecker(pctx, el.prev.width, el.prev.height);
+  if(!img || !viewFrames[selected]){
+    el.prevInfo.textContent='-';
+    return;
+  }
+  const fr=viewFrames[selected];
+  const src = (el.trim.checked && fr.trim) ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h,offX:0,offY:0,srcW:fr.w,srcH:fr.h,empty:false};
+  const pad=14;
+  const W=el.prev.width, H=el.prev.height;
+  const scale=Math.min((W-2*pad)/src.w, (H-2*pad)/src.h);
+  const dw=Math.max(1, Math.floor(src.w*scale));
+  const dh=Math.max(1, Math.floor(src.h*scale));
+  const dx=Math.floor((W-dw)/2);
+  const dy=Math.floor((H-dh)/2);
+  pctx.imageSmoothingEnabled=false;
+  pctx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, dw, dh);
+
+  el.prevInfo.innerHTML = `Frame <b>${selected}</b><br/>Rect: ${fr.w}×${fr.h}` + (el.trim.checked?`<br/>Trim: ${src.w}×${src.h}`:'') + `<br/>Offset: (${floorInt(el.offx.value,0)}, ${floorInt(el.offy.value,0)})`;
+}
+
+function drawAnimationCanvas(){
+  const W=el.anim.width, H=el.anim.height;
+  paintChecker(actx, W, H);
+
+  if(!img || viewFrames.length===0){
+    el.animInfo.textContent='-';
+    return;
+  }
+
+  const fr=viewFrames[selected];
+  const src = (el.trim.checked && fr.trim) ? fr.trim : {x:0,y:0,w:fr.w,h:fr.h};
+  const pad=18;
+  const scale=Math.min((W-2*pad)/src.w, (H-2*pad)/src.h);
+  const dw=Math.max(1, Math.floor(src.w*scale));
+  const dh=Math.max(1, Math.floor(src.h*scale));
+  const dx=Math.floor((W-dw)/2);
+  const dy=Math.floor((H-dh)/2);
+
+  actx.imageSmoothingEnabled=false;
+  actx.drawImage(srcCanvas, fr.x+src.x, fr.y+src.y, src.w, src.h, dx, dy, dw, dh);
+
+  el.animInfo.textContent = `Frame ${selected}/${Math.max(0,viewFrames.length-1)} • ${playing?'Playing':'Paused'}`;
+}
+
+function drawAll(){
+  drawImageCanvas();
+  drawSelectedPreview();
+  drawAnimationCanvas();
 }
 
 function buildFilmstrip(){
@@ -694,10 +830,11 @@ function buildFilmstrip(){
       el.frameIdx.value=String(i);
       el.idxVal.textContent=String(i);
       buildFilmstrip();
-      draw();
+      drawAll();
     });
 
     c.addEventListener('click', (ev)=>{
+      // set pivot based on click point
       ev.stopPropagation();
       const rect=c.getBoundingClientRect();
       const mx=(ev.clientX-rect.left)/rect.width;
@@ -711,11 +848,46 @@ function buildFilmstrip(){
       }
       el.px.value=String(clamp(px,0,1).toFixed(2));
       el.py.value=String(clamp(py,0,1).toFixed(2));
-      draw();
+      drawAll();
     });
 
     el.strip.appendChild(div);
   }
+}
+
+// ===== Recompute / Playback =====
+function recompute(){
+  if(!img){ drawAll(); return; }
+
+  buildSrcCanvas();
+  applyColorKeyIfNeeded();
+
+  updateDerivedFields();
+
+  frames=computeGridFrames();
+  if(el.trim.checked){
+    for(const fr of frames) fr.trim=computeTrimForFrame(fr);
+  }else{
+    for(const fr of frames) delete fr.trim;
+  }
+
+  viewFrames=applyRange(frames);
+
+  el.frameIdx.max=String(Math.max(0, viewFrames.length-1));
+  selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0, viewFrames.length-1));
+  el.frameIdx.value=String(selected);
+  el.idxVal.textContent=String(selected);
+
+  el.rangeStart.max=String(Math.max(0, frames.length-1));
+  el.rangeEnd.max=String(Math.max(0, frames.length-1));
+
+  el.imgInfo.textContent=`${img.width}×${img.height}px`;
+  el.frameInfo.textContent=`${viewFrames.length} frames`;
+  el.totalHint.textContent=String(viewFrames.length);
+
+  buildFilmstrip();
+  enableUI(true);
+  drawAll();
 }
 
 function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
@@ -728,7 +900,7 @@ function startTimer(){
   pingDir=dir;
 
   timer=setInterval(()=>{
-    if(max<=0){ draw(); return; }
+    if(max<=0){ drawAnimationCanvas(); return; }
     if(el.loopMode.value==='pingpong'){
       selected += pingDir;
       if(selected>=max){ selected=max; pingDir=-1; }
@@ -741,7 +913,7 @@ function startTimer(){
     el.frameIdx.value=String(selected);
     el.idxVal.textContent=String(selected);
     buildFilmstrip();
-    draw();
+    drawAnimationCanvas();
   }, ms);
 }
 
@@ -750,6 +922,7 @@ function togglePlay(){
   playing=!playing;
   el.btnPlay.textContent=playing?'⏸ Pause':'▶ Play / Pause';
   if(playing) startTimer(); else stopTimer();
+  drawAnimationCanvas();
 }
 
 function resetAll(){
@@ -757,26 +930,27 @@ function resetAll(){
   selected=0;
   el.frameIdx.value='0'; el.idxVal.textContent='0';
   el.fps.value='8'; el.fpsVal.textContent='8';
-  el.mode.value='colsrows';
-  el.cols.value='4'; el.rows.value='1';
-  el.fw.value='64'; el.fh.value='64';
-  el.margin.value='0'; el.spacing.value='0';
-  el.order.value='row';
-  el.px.value='0.5'; el.py.value='1.0';
-  el.trim.checked=false;
-  el.colorkey.checked=false;
-  el.keyColor.value='#000000';
-  el.keyTol.value='20';
-  el.packMode.value='none';
-  el.pad.value='2';
-  el.pot.value='no';
-  el.jsonFmt.value='simple';
   el.loopMode.value='loop';
   el.dirMode.value='forward';
-  el.rangeMode.value='all';
-  setModeUI();
-  setRangeUI();
+  el.showGrid.checked=true;
+  el.showPivot.checked=true;
+  el.pickMode.checked=false;
+  el.bg.value='checker';
+  el.zoom.value='1'; el.zoomVal.textContent='1.00x';
+
+  // Keep current cut settings, but reset offsets
+  el.offx.value='0';
+  el.offy.value='0';
+
   recompute();
+}
+
+// ===== Color picker / drag offset on image canvas =====
+function canvasClientToCanvas(ev, canvas){
+  const rect=canvas.getBoundingClientRect();
+  const x=(ev.clientX-rect.left) * (canvas.width/rect.width);
+  const y=(ev.clientY-rect.top) * (canvas.height/rect.height);
+  return {x,y};
 }
 
 function pickColorAtCanvas(x,y){
@@ -793,17 +967,52 @@ function pickColorAtCanvas(x,y){
   el.keyColor.value=hex;
 }
 
+let dragging=false;
+let dragStart=null;
+let dragStartOff=null;
+let dragRAF=0;
+
+el.cv.addEventListener('mousedown', (ev)=>{
+  if(!img) return;
+  if(el.pickMode.checked) return;
+  dragging=true;
+  dragStart=canvasClientToCanvas(ev, el.cv);
+  dragStartOff={x: floorInt(el.offx.value,0), y: floorInt(el.offy.value,0)};
+});
+
+window.addEventListener('mouseup', ()=>{ dragging=false; dragStart=null; dragStartOff=null; });
+
+window.addEventListener('mousemove', (ev)=>{
+  if(!dragging || !img || !dragStart) return;
+  if(dragRAF) return;
+  dragRAF=requestAnimationFrame(()=>{
+    dragRAF=0;
+    const p=canvasClientToCanvas(ev, el.cv);
+    const z=Number(el.zoom.value);
+    const dx=(p.x-dragStart.x)/z;
+    const dy=(p.y-dragStart.y)/z;
+    el.offx.value=String(Math.round(dragStartOff.x + dx));
+    el.offy.value=String(Math.round(dragStartOff.y + dy));
+    recompute();
+  });
+});
+
+el.cv.addEventListener('click', (ev)=>{
+  if(!img) return;
+  if(!el.pickMode.checked) return;
+  const p=canvasClientToCanvas(ev, el.cv);
+  pickColorAtCanvas(p.x,p.y);
+  el.colorkey.checked=true;
+  recompute();
+});
+
+// ===== Export (same features) =====
 function downloadBlob(blob, filename){
   const a=document.createElement('a');
   const url=URL.createObjectURL(blob);
   a.href=url; a.download=filename;
   a.click();
   setTimeout(()=>URL.revokeObjectURL(url), 1500);
-}
-
-function getFilePrefix(){
-  const raw=(el.state.value||'').trim();
-  return raw.length?raw:'sprite';
 }
 
 function getDurationMs(){
@@ -919,7 +1128,7 @@ function makeTexturePackerJSON(sheetName, packed, packedFrames){
   const prefix=getFilePrefix();
   const out={
     frames:{},
-    meta:{app:'Sprite Tool v2.1', image:sheetName, size:{w:packed.width,h:packed.height}, scale:'1'}
+    meta:{app:'Sprite Tool v2.2', image:sheetName, size:{w:packed.width,h:packed.height}, scale:'1'}
   };
   for(let i=0;i<viewFrames.length;i++){
     const src=viewFrames[i];
@@ -967,9 +1176,13 @@ async function exportFramesZip(){
     const t=(el.trim.checked && fr.trim)?fr.trim:null;
     const sx=fr.x+(t?t.x:0), sy=fr.y+(t?t.y:0);
     const sw=(t?t.w:fr.w), sh=(t?t.h:fr.h);
-    off.width=sw; off.height=sh;
-    octx.clearRect(0,0,sw,sh);
-    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+    const csx=clamp(sx,0,img.width-1);
+    const csy=clamp(sy,0,img.height-1);
+    const csw=clamp(sw,1,img.width-csx);
+    const csh=clamp(sh,1,img.height-csy);
+    off.width=csw; off.height=csh;
+    octx.clearRect(0,0,csw,csh);
+    octx.drawImage(srcCanvas, csx,csy,csw,csh, 0,0,csw,csh);
     const blob=await new Promise(res=>off.toBlob(res,'image/png'));
     zip.file(`${prefix}_${String(i).padStart(3,'0')}.png`, await blob.arrayBuffer());
   }
@@ -983,13 +1196,11 @@ async function exportAllZip(){
   const prefix=getFilePrefix();
   const zip=new JSZip();
 
-  // JSON
   const packed=buildPackedSheet();
   const sheetName = (packed.mode==='none') ? '(source image)' : `${prefix}_sheet.png`;
   const json = (el.jsonFmt.value==='tp') ? makeTexturePackerJSON(sheetName, packed, packed.placements) : makeSimpleJSON(sheetName, packed, packed.placements);
   zip.file(`${prefix}.json`, JSON.stringify(json,null,2));
 
-  // frames
   const off=document.createElement('canvas');
   const octx=off.getContext('2d');
   octx.imageSmoothingEnabled=false;
@@ -998,14 +1209,17 @@ async function exportAllZip(){
     const t=(el.trim.checked && fr.trim)?fr.trim:null;
     const sx=fr.x+(t?t.x:0), sy=fr.y+(t?t.y:0);
     const sw=(t?t.w:fr.w), sh=(t?t.h:fr.h);
-    off.width=sw; off.height=sh;
-    octx.clearRect(0,0,sw,sh);
-    octx.drawImage(srcCanvas, sx,sy,sw,sh, 0,0,sw,sh);
+    const csx=clamp(sx,0,img.width-1);
+    const csy=clamp(sy,0,img.height-1);
+    const csw=clamp(sw,1,img.width-csx);
+    const csh=clamp(sh,1,img.height-csy);
+    off.width=csw; off.height=csh;
+    octx.clearRect(0,0,csw,csh);
+    octx.drawImage(srcCanvas, csx,csy,csw,csh, 0,0,csw,csh);
     const blob=await new Promise(res=>off.toBlob(res,'image/png'));
     zip.file(`frames/${prefix}_${String(i).padStart(3,'0')}.png`, await blob.arrayBuffer());
   }
 
-  // sheet
   const sheetCanvas=(packed.mode==='none')?srcCanvas:packed.canvas;
   const sheetBlob=await canvasToPngBlob(sheetCanvas);
   zip.file((packed.mode==='none')?`${prefix}_source.png`:`${prefix}_sheet.png`, await sheetBlob.arrayBuffer());
@@ -1013,7 +1227,16 @@ async function exportAllZip(){
   downloadBlob(await zip.generateAsync({type:'blob'}), `${prefix}_bundle.zip`);
 }
 
-// Events
+// ===== UI events =====
+function setRangeUI(){
+  el.rangeBox.style.display=(el.rangeMode.value==='custom')?'grid':'none';
+  recompute();
+}
+
+function setModeUI(){
+  recompute();
+}
+
 el.mode.addEventListener('change', setModeUI);
 el.rangeMode.addEventListener('change', setRangeUI);
 
@@ -1022,28 +1245,28 @@ for(const e of [el.cols,el.rows,el.fw,el.fh,el.margin,el.spacing,el.offx,el.offy
   e.addEventListener('change', recompute);
 }
 
-el.fps.addEventListener('input', ()=>{ el.fpsVal.textContent=el.fps.value; if(playing) startTimer(); });
-el.frameIdx.addEventListener('input', ()=>{ selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0,viewFrames.length-1)); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); });
+el.fps.addEventListener('input', ()=>{ el.fpsVal.textContent=el.fps.value; if(playing) startTimer(); drawAnimationCanvas(); });
+el.frameIdx.addEventListener('input', ()=>{ selected=clamp(floorInt(el.frameIdx.value,0),0,Math.max(0,viewFrames.length-1)); el.idxVal.textContent=String(selected); buildFilmstrip(); drawAll(); });
 el.loopMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
 el.dirMode.addEventListener('change', ()=>{ if(playing) startTimer(); });
 
-el.btnPlay.addEventListener('click', ()=>{ togglePlay(); });
-el.btnReset.addEventListener('click', ()=>{ resetAll(); });
+el.btnPlay.addEventListener('click', togglePlay);
+el.btnReset.addEventListener('click', resetAll);
 
-el.btnPivotBottom.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='1.00'; draw(); });
-el.btnPivotCenter.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='0.50'; draw(); });
-el.px.addEventListener('input', draw);
-el.py.addEventListener('input', draw);
+el.btnPivotBottom.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='1.00'; drawAll(); });
+el.btnPivotCenter.addEventListener('click', ()=>{ el.px.value='0.50'; el.py.value='0.50'; drawAll(); });
+el.px.addEventListener('input', drawAll);
+el.py.addEventListener('input', drawAll);
 
 el.btnJSON.addEventListener('click', exportJSON);
 el.btnZIP.addEventListener('click', exportFramesZip);
 el.btnSheet.addEventListener('click', exportPackedSheet);
 el.btnAll.addEventListener('click', exportAllZip);
 
-el.zoom.addEventListener('input', draw);
-el.bg.addEventListener('change', draw);
-el.showGrid.addEventListener('change', draw);
-el.showPivot.addEventListener('change', draw);
+el.zoom.addEventListener('input', drawImageCanvas);
+el.bg.addEventListener('change', drawAll);
+el.showGrid.addEventListener('change', drawImageCanvas);
+el.showPivot.addEventListener('change', drawImageCanvas);
 
 el.file.addEventListener('change', async ()=>{
   const f=el.file.files?.[0];
@@ -1061,76 +1284,28 @@ el.file.addEventListener('change', async ()=>{
   el.offx.value='0';
   el.offy.value='0';
   el.order.value='row';
+  el.rangeMode.value='all';
 
   playing=false; stopTimer();
   selected=0;
   el.frameIdx.value='0'; el.idxVal.textContent='0';
+
   enableUI(true);
-  setModeUI();
   setRangeUI();
-  recompute();
-});
-
-// Drag to move grid offset (when not in Pick color mode)
-let dragging=false;
-let dragStart=null;
-let dragStartOff=null;
-let dragRAF=0;
-
-function canvasClientToCanvas(ev){
-  const rect=el.cv.getBoundingClientRect();
-  const x=(ev.clientX-rect.left) * (el.cv.width/rect.width);
-  const y=(ev.clientY-rect.top) * (el.cv.height/rect.height);
-  return {x,y};
-}
-
-el.cv.addEventListener('mousedown', (ev)=>{
-  if(!img) return;
-  if(el.pickMode.checked) return;
-  dragging=true;
-  dragStart=canvasClientToCanvas(ev);
-  dragStartOff={x: floorInt(el.offx.value,0), y: floorInt(el.offy.value,0)};
-});
-
-window.addEventListener('mouseup', ()=>{ dragging=false; dragStart=null; dragStartOff=null; });
-
-window.addEventListener('mousemove', (ev)=>{
-  if(!dragging || !img) return;
-  if(!dragStart) return;
-  if(dragRAF) return;
-  dragRAF=requestAnimationFrame(()=>{
-    dragRAF=0;
-    const p=canvasClientToCanvas(ev);
-    const z=Number(el.zoom.value);
-    const dx=(p.x-dragStart.x)/z;
-    const dy=(p.y-dragStart.y)/z;
-    el.offx.value=String(Math.round(dragStartOff.x + dx));
-    el.offy.value=String(Math.round(dragStartOff.y + dy));
-    recompute();
-  });
-});
-
-// Click to pick color (only when Pick color enabled)
-el.cv.addEventListener('click', (ev)=>{
-  if(!img) return;
-  if(!el.pickMode.checked) return;
-  const p=canvasClientToCanvas(ev);
-  pickColorAtCanvas(p.x,p.y);
-  el.colorkey.checked=true;
   recompute();
 });
 
 window.addEventListener('keydown', (e)=>{
   if(e.code==='Space'){ e.preventDefault(); if(!el.btnPlay.disabled) togglePlay(); }
-  if(e.code==='ArrowRight'){ if(!img) return; selected=clamp(selected+1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); }
-  if(e.code==='ArrowLeft'){ if(!img) return; selected=clamp(selected-1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); draw(); }
+  if(e.code==='ArrowRight'){ if(!img) return; selected=clamp(selected+1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); drawAll(); }
+  if(e.code==='ArrowLeft'){ if(!img) return; selected=clamp(selected-1,0,Math.max(0,viewFrames.length-1)); el.frameIdx.value=String(selected); el.idxVal.textContent=String(selected); buildFilmstrip(); drawAll(); }
 });
 
-// Init
+// ===== Initial render =====
 enableUI(false);
 el.fpsVal.textContent=el.fps.value;
-setModeUI();
-setRangeUI();
+paintChecker(ctx, el.cv.width, el.cv.height);
+paintChecker(actx, el.anim.width, el.anim.height);
 paintChecker(pctx, el.prev.width, el.prev.height);
 </script>
 </body>
